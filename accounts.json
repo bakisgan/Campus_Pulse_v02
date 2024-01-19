@@ -1,0 +1,128 @@
+{
+  "yusuf@gmail.com": {
+    "name": "Yusuf",
+    "surname": "Aydemir",
+    "password": "12345",
+    "Account_Type": "Admin",
+    "Email": "yusuf@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": "12345"
+  },
+  "serkan@gmail.com": {
+    "name": "Serkan",
+    "surname": "Bakisgan",
+    "password": "12345",
+    "Account_Type": "Student",
+    "Email": "serkan@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": "015202819030"
+  },
+  "merve@gmail.com": {
+    "name": "Merve",
+    "surname": "Yilmaz",
+    "password": "12345",
+    "Account_Type": "Student",
+    "Email": "merve@gmail.com",
+    "Gender": "Female",
+    "DoB": "",
+    "Phone": "+31456456456"
+  },
+  "murat@gmail.com": {
+    "name": "Murat",
+    "surname": "Mert",
+    "password": "12345",
+    "Account_Type": "Student",
+    "Email": "murat@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": ""
+  },
+  "mehmet@gmail.com": {
+    "name": "Mehmet",
+    "surname": "Koc",
+    "password": "12345",
+    "Account_Type": "Teacher",
+    "Email": "mehmet@gmail.com",
+    "Gender": "Male",
+    "DoB": "",
+    "Phone": "12345"
+  },
+  "adem@gmail.com": {
+    "name": "Adem",
+    "surname": "Dogan",
+    "password": "12345",
+    "Account_Type": "Student",
+    "Email": "adem@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": ""
+  },
+  "alper@gmail.com": {
+    "name": "Alper",
+    "surname": "Kaan Kavili",
+    "password": "12345",
+    "Account_Type": "Teacher",
+    "Email": "alper@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": ""
+  },
+  "melike@gmail.com": {
+    "name": "Melike",
+    "surname": "Kaya",
+    "password": "12345",
+    "Account_Type": "Student",
+    "Email": "melike@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": ""
+  },
+  "ali.cihan@gmail.com": {
+    "password": "ABab12**",
+    "Account_Type": "Student",
+    "name": "Ali",
+    "surname": "Cihan",
+    "Email": "ali.cihan@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": ""
+  },
+  "ogrenciyilmaz@gmail.com": {
+    "password": "AbCn12**",
+    "Account_Type": "Student",
+    "name": "Yilmaz",
+    "surname": "Ogrenci",
+    "Email": "ogrenciyilmaz@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": ""
+  },
+  "ogrencizafer@gmail.com": {
+    "password": "AbCn12**",
+    "Account_Type": "Student",
+    "name": "Zafer",
+    "surname": "Ogrenci",
+    "Email": "ogrencizafer@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": ""
+  },
+  "ogrencialper@gmail.com": {
+    "password": "AbCn12***",
+    "Account_Type": "Student",
+    "name": "Alper",
+    "surname": "Ogrenci",
+    "Email": "ogrencialper@gmail.com",
+    "Gender": "",
+    "DoB": "",
+    "Phone": ""
+  },
+  "teacheraccount@gmail.com": {
+    "password": "AbCn12**",
+    "Account_Type": "Teacher",
+    "name": "Teacher",
+    "surname": "Account"
+  }
+}

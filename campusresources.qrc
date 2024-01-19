@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="background">
+    <file>todo.jpg</file>
+    <file>todo_background.jpg</file>
+  </qresource>
+  <qresource prefix="icons">
+    <file>chat.jpg</file>
+    <file>announcement.jpg</file>
+    <file>woman.jpg</file>
+    <file>man.jpg</file>
+  </qresource>
+</RCC>

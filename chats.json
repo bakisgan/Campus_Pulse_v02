@@ -1,0 +1,210 @@
+{
+  "yusuf@gmail.com": {
+    "merve@gmail.com": {
+      "message1": {
+        "Time": 1703807275.856741,
+        "Status": "Sent",
+        "read": 0,
+        "Message": "How are you doing"
+      },
+      "message2": {
+        "Time": 1703822275.856741,
+        "Status": "Sent",
+        "read": 0,
+        "Message": "How are you doing"
+      },
+      "message3": {
+        "Time": 1704128338.534375,
+        "Status": "Received",
+        "read": 0,
+        "Message": "Merhabalar"
+      },
+      "message4": {
+        "Time": 1704133229.079366,
+        "Status": "Sent",
+        "read": 0,
+        "Message": "Merhabalar"
+      },
+      "message5": {
+        "Time": 1704274158.699859,
+        "Status": "Sent",
+        "read": 0,
+        "Message": "Hi\n"
+      }
+    },
+    "serkan@gmail.com": {
+      "message1": {
+        "Time": 1704231046.40583,
+        "Status": "Sent",
+        "read": 0,
+        "Message": "hi"
+      },
+      "message2": {
+        "Time": 1704274174.758394,
+        "Status": "Sent",
+        "read": 0,
+        "Message": "Hallo"
+      }
+    },
+    "yusuf@gmail.com": {
+      "message1": {
+        "Time": 1704231056.501962,
+        "Status": "Received",
+        "read": 0,
+        "Message": "hi"
+      },
+      "message2": {
+        "Time": 1704231068.845696,
+        "Status": "Received",
+        "read": 0,
+        "Message": "hi"
+      }
+    }
+  },
+  "merve@gmail.com": {
+    "serkan@gmail.com": {
+      "message1": {
+        "Time": 1704128313.500026,
+        "Status": "Sent",
+        "read": 0,
+        "Message": "Merhabalar"
+      }
+    },
+    "merve@gmail.com": {
+      "message1": {
+        "Time": 1704128320.767164,
+        "Status": "Received",
+        "read": 1,
+        "Message": "Merhabalar"
+      },
+      "message2": {
+        "Time": 1704128350.332015,
+        "Status": "Received",
+        "read": 1,
+        "Message": "Nas\u0131ls\u0131n\u0131z"
+      },
+      "message3": {
+        "Time": 1704225215.902655,
+        "Status": "Received",
+        "read": 1,
+        "Message": "Merhaba hocam nasilsiniz"
+      }
+    },
+    "murat@gmail.com": {
+      "message1": {
+        "Time": 1704128326.586676,
+        "Status": "Sent",
+        "read": 1,
+        "Message": "Merhabalar"
+      },
+      "message2": {
+        "Time": 1704225277.983465,
+        "Status": "Sent",
+        "read": 1,
+        "Message": "hello how are you\n"
+      }
+    },
+    "yusuf@gmail.com": {
+      "message1": {
+        "Time": 1704128338.534375,
+        "Status": "Sent",
+        "read": 1,
+        "Message": "Merhabalar"
+      },
+      "message2": {
+        "Time": 1704133229.079366,
+        "Status": "Received",
+        "read": 1,
+        "Message": "Merhabalar"
+      },
+      "message3": {
+        "Time": 1704274158.699859,
+        "Status": "Received",
+        "read": 1,
+        "Message": "Hi\n"
+      }
+    },
+    "mehmet@gmail.com": {
+      "message1": {
+        "Time": 1704403133.531978,
+        "Status": "Received",
+        "read": 1,
+        "Message": "Merhabar"
+      },
+      "message2": {
+        "Time": 1704403162.255206,
+        "Status": "Received",
+        "read": 1,
+        "Message": "Bug\u00fcnk\u00fc toplant\u0131m\u0131z saat 2200da yapaca\u011f\u0131z"
+      },
+      "message3": {
+        "Time": 1704403313.907407,
+        "Status": "Sent",
+        "read": 1,
+        "Message": "Merhabalar\n"
+      }
+    }
+  },
+  "serkan@gmail.com": {
+    "merve@gmail.com": {
+      "message1": {
+        "Time": 1704128313.500026,
+        "Status": "Received",
+        "read": 1,
+        "Message": "Merhabalar"
+      }
+    },
+    "yusuf@gmail.com": {
+      "message1": {
+        "Time": 1704231046.40583,
+        "Status": "Received",
+        "read": 0,
+        "Message": "hi"
+      },
+      "message2": {
+        "Time": 1704274174.758394,
+        "Status": "Received",
+        "read": 0,
+        "Message": "Hallo"
+      }
+    }
+  },
+  "murat@gmail.com": {
+    "merve@gmail.com": {
+      "message1": {
+        "Time": 1704128326.586676,
+        "Status": "Received",
+        "read": 0,
+        "Message": "Merhabalar"
+      },
+      "message2": {
+        "Time": 1704225277.983465,
+        "Status": "Received",
+        "read": 0,
+        "Message": "hello how are you\n"
+      }
+    }
+  },
+  "mehmet@gmail.com": {
+    "merve@gmail.com": {
+      "message1": {
+        "Time": 1704403133.531978,
+        "Status": "Sent",
+        "read": 1,
+        "Message": "Merhabar"
+      },
+      "message2": {
+        "Time": 1704403162.255206,
+        "Status": "Sent",
+        "read": 1,
+        "Message": "Bug\u00fcnk\u00fc toplant\u0131m\u0131z saat 2200da yapaca\u011f\u0131z"
+      },
+      "message3": {
+        "Time": 1704403313.907407,
+        "Status": "Received",
+        "read": 0,
+        "Message": "Merhabalar\n"
+      }
+    }
+  }
+}

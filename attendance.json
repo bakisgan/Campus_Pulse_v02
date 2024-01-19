@@ -1,0 +1,109 @@
+{
+  "yusuf@gmail.com": {
+    "Mentor Meeting": {
+      "2023-12-28": "Attended",
+      "2024-01-01": "Attended",
+      "2024-02-14": "Not Attended"
+    },
+    "Data Science": {
+      "2023-12-28": "Attended",
+      "2024-01-01": "Not Attended",
+      "2024-02-14": "Attended"
+    }
+  },
+  "merve@gmail.com": {
+    "Mentor Meeting": {
+      "2023-12-28": "Not Attended",
+      "2024-01-01": "Attended",
+      "2024-02-14": "Not Attended"
+    },
+    "Data Science": {
+      "2023-12-25": "Attended",
+      "2023-01-03": "Not Attended",
+      "2024-02-15": "Not Attended",
+      "2024-01-17": "Not Attended"
+    }
+  },
+  "hakan@gmail.com": {
+    "Mentor Meeting": {
+      "2023-12-28": "Not Attended",
+      "2024-01-01": "Attended",
+      "2024-02-14": "Not Attended"
+    },
+    "Data Science": {
+      "2023-12-25": "Attended",
+      "2023-01-03": "Attended",
+      "2024-02-15": "Attended"
+    }
+  },
+  "murat@gmail.com": {
+    "Mentor Meeting": {
+      "2024-01-24": "Not Attended",
+      "2024-01-01": "Not Attended",
+      "2024-01-23": "Not Attended"
+    },
+    "Data Science": {
+      "2024-01-23": "Not Attended"
+    }
+  },
+  "serkan@gmail.com": {
+    "Data Science": {
+      "2024-01-23": "Not Attended",
+      "2023-01-03": "Not Attended",
+      "2024-01-17": "Not Attended"
+    },
+    "Mentor Meeting": {
+      "2024-03-10": "-"
+    }
+  },
+  "melike@gmail.com": {
+    "Mentor Meeting": {
+      "2024-02-01": "Not Attended",
+      "2024-02-15": "Not Attended",
+      "2024-03-10": "Not Attended"
+    },
+    "Data Science": {
+      "2024-02-01": "Not Attended",
+      "2024-02-15": "Not Attended",
+      "2024-03-10": "Not Attended"
+    }
+  },
+  "adem@gmail.com": {
+    "Mentor Meeting": {
+      "2023-02-01": "Not Attended",
+      "2024-02-15": "Not Attended",
+      "2024-03-10": "Not Attended",
+      "2024-01-23": "Not Attended"
+    },
+    "Data Science": {
+      "2024-02-01": "Not Attended",
+      "2024-02-15": "Not Attended",
+      "2024-03-10": "Not Attended"
+    }
+  },
+  "ali.cihan@gmail.com": {
+    "Mentor Meeting": {
+      "2024-01-05": "Not Attended",
+      "2024-01-08": "Not Attended",
+      "2024-03-10": "-",
+      "2023-12-28": "-",
+      "2024-02-15": "-",
+      "2024-01-23": "Not Attended"
+    },
+    "Data Science": {
+      "2024-01-06": "Not Attended",
+      "2023-01-03": "Not Attended",
+      "2023-02-01": "Not Attended",
+      "2023-12-28": "Not Attended",
+      "2023-12-25": "Attended"
+    }
+  },
+  "ogrencizafer@gmail.com": {
+    "Data Science": {
+      "2024-01-15": "Not Attended"
+    },
+    "Mentor Meeting": {
+      "2024-01-23": "Not Attended"
+    }
+  }
+}
