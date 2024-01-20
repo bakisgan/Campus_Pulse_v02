@@ -44,9 +44,9 @@
    <widget class="QPushButton" name="Back_to_login_but">
     <property name="geometry">
      <rect>
-      <x>490</x>
-      <y>500</y>
-      <width>161</width>
+      <x>660</x>
+      <y>510</y>
+      <width>231</width>
       <height>31</height>
      </rect>
     </property>
@@ -60,9 +60,9 @@
    <widget class="QPushButton" name="Create_TA_but">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>440</y>
-      <width>421</width>
+      <x>660</x>
+      <y>470</y>
+      <width>231</width>
       <height>31</height>
      </rect>
     </property>
@@ -76,7 +76,7 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>230</x>
+      <x>140</x>
       <y>90</y>
       <width>161</width>
       <height>31</height>
@@ -93,7 +93,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLineEdit" name="TA_email_LE">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>330</x>
       <y>80</y>
       <width>231</width>
       <height>51</height>
@@ -106,7 +106,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>230</x>
+      <x>140</x>
       <y>160</y>
       <width>161</width>
       <height>31</height>
@@ -123,7 +123,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLineEdit" name="TA_password_LE">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>330</x>
       <y>150</y>
       <width>231</width>
       <height>51</height>
@@ -139,7 +139,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>230</x>
+      <x>140</x>
       <y>230</y>
       <width>161</width>
       <height>31</height>
@@ -156,7 +156,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLineEdit" name="TA_confirmpass_LE">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>330</x>
       <y>220</y>
       <width>231</width>
       <height>51</height>
@@ -172,7 +172,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>230</x>
+      <x>140</x>
       <y>380</y>
       <width>141</width>
       <height>16</height>
@@ -189,7 +189,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>230</x>
+      <x>140</x>
       <y>310</y>
       <width>141</width>
       <height>16</height>
@@ -206,7 +206,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLineEdit" name="TA_name_LE">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>330</x>
       <y>290</y>
       <width>231</width>
       <height>51</height>
@@ -225,7 +225,7 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLineEdit" name="TA_surname_LE">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>330</x>
       <y>360</y>
       <width>231</width>
       <height>51</height>
@@ -239,6 +239,78 @@ color: rgb(255, 255, 255);</string>
     </property>
     <property name="echoMode">
      <enum>QLineEdit::Normal</enum>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="TA_phone_LE">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>430</y>
+      <width>231</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-size:14pt; color:rgb(243, 243, 243)</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="echoMode">
+     <enum>QLineEdit::Normal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>450</y>
+      <width>141</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-size:12pt; 
+color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Phone</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="TA_city_LE">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>490</y>
+      <width>231</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-size:14pt; color:rgb(243, 243, 243)</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="echoMode">
+     <enum>QLineEdit::Normal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>510</y>
+      <width>141</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-size:12pt; 
+color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>City</string>
     </property>
    </widget>
   </widget>

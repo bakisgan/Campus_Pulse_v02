@@ -27,40 +27,6 @@ global_user_id = None
 # Construct the database URL
 db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
 
-# Database transactions class
-class db_transactions:
-    def __init__(self, db_url):
-        self.conn = psycopg2.connect(db_url)
-        self.cur = self.conn.cursor()
-
-    def run_query(self, query, data=None):
-        try:
-            self.cur.execute(query, data)
-            self.conn.commit()
-        except Exception as e:
-            print(f"Error: {e}")
-            self.conn.rollback()
-
-    def fetch_data(self, query, data=None):
-        try:
-            self.cur.execute(query, data)
-            return self.cur.fetchall()
-        except Exception as e:
-            print(f"Error: {e}")
-            return None
-
-    def close_connection(self):
-        self.cur.close()
-        self.conn.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.close_connection()
-
-
-
 class Login(QMainWindow):
     """
     Class representing the login window of the application.
@@ -236,10 +202,10 @@ class Signup(QMainWindow):
         """
         super(Signup, self).__init__()
         loadUi('signup.ui', self)
-        self.sign_up_but.clicked.connect(lambda: self.signup_swt_login(db_trans))
+        self.sign_up_but.clicked.connect(self.signup_swt_login)
         self.Back_Log_but.clicked.connect(self.switch_loginform)
 
-    def signup_swt_login(self,db_trans):
+    def signup_swt_login(self):
         """
         Initiates the signup process when the signup button is clicked.
 
@@ -259,10 +225,15 @@ class Signup(QMainWindow):
         user_type = "Student"
         application_id = None
         good_to_go=False
+        global db_url
+
 
         try:
             # Check for existing user in the database
-            existing_user = db_trans.fetch_data("SELECT user_id FROM usertable WHERE email = %s", (email,))
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            cur.execute("SELECT user_id FROM usertable WHERE email = %s", (email,))
+            existing_user = cur.fetchone()
             if existing_user:
                 self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
             elif plain_password != plain_password_conf:
@@ -272,7 +243,7 @@ class Signup(QMainWindow):
             else:
                 hashed_password = bcrypt.hash(plain_password)
 
-                db_trans.run_query("""
+                cur.execute("""
                     INSERT INTO usertable (
                         email, password, first_name, last_name, phone, city, gender, birthdate, user_type, status, application_id
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -283,6 +254,13 @@ class Signup(QMainWindow):
         except Exception as e:
             self.show_error_message(f"An unexpected error occurred: {str(e)}")
 
+        finally:
+            # Close database connection
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
+
                                             
         if good_to_go:
             try:
@@ -290,6 +268,8 @@ class Signup(QMainWindow):
                 login.clear_line_edits_loginform()
             except Exception as e:
                 self.show_error_message(f"An unexpected error occurred while saving the account information: {str(e)}")
+
+
 
 
     def switch_loginform(self):
@@ -409,6 +389,13 @@ class ContactAdmin(QMainWindow):
         error_box.setText(message)
         error_box.exec_()
 
+    def show_success_message(self, message):  # Add this method
+        success_box = QMessageBox()
+        success_box.setIcon(QMessageBox.Information)
+        success_box.setWindowTitle("Success")
+        success_box.setText(message)
+        success_box.exec_()
+
     def send_TA_Account(self):
         """
         Sends a request to create a Teacher Assistant (TA) account.
@@ -418,52 +405,55 @@ class ContactAdmin(QMainWindow):
         adds the new TA account request to the 'TA_tobecreated.json' file.
         """
         email = self.TA_email_LE.text()
-        password = self.TA_password_LE.text()
-        password_conf= self.TA_confirmpass_LE.text()
+        plain_password = self.TA_password_LE.text()
+        plain_password_conf= self.TA_confirmpass_LE.text()
+        first_name = self.TA_name_LE.text()
+        last_name = self.TA_surname_LE.text()
+        phone = self.TA_phone_LE.text()
+        city = self.TA_city_LE.text()
+        gender = None
+        birthdate = None
+        # user_type = "Teacher"
+        global db_url
         good_to_go=False
+
         try:
-            with open("TA_tobecreated.json", "r") as pendinginfo:
-                pending_accounts = json.load(pendinginfo)
-
-            if email in pending_accounts:
-                self.show_error_message("You have already applied for creating an account. Admin will create your account in 24 hours")  # Pending account.
+            # Check for existing user in the database
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            cur.execute("SELECT user_id FROM usertable WHERE email = %s", (email,))
+            existing_user_active = cur.fetchone()
+            cur.execute("SELECT application_id FROM application WHERE email = %s", (email,))
+            existing_user_pending = cur.fetchone()
+            if existing_user_pending:
+                self.show_error_message("Your previous application is pending. It will be activated soon!")
+            elif existing_user_active:
+                self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
+            elif plain_password != plain_password_conf:
+                self.show_error_message("The passwords entered do not match. Please ensure that the passwords are identical and try again.")
+            elif not self.password_strength(plain_password):
+                self.show_error_message("Please use at least 2 uppercase, 2 lowercase, and 2 special characters. Minimum length is 8 characters.")
             else:
-                try:
-                    with open("accounts.json", "r") as userinfo:
-                        accounts = json.load(userinfo)
+                hashed_password = bcrypt.hash(plain_password)
 
-                    if email in accounts:
-                        self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")  # email exists. if you have an account go to login page.
-                    elif password != password_conf:
-                        self.show_error_message("The passwords entered do not match. Please ensure that the passwords are identical and try again.")
-                    elif not self.password_strength(password):
-                        self.show_error_message("Please use at least 2 uppercase, 2 lowercase, and 2 special characters. Minimum length is 8 characters.")
-                    else:
-                        pending_accounts[email] = {
-                            "password": password,
-                            "Account_Type": "Teacher",
-                            "name": self.TA_name_LE.text(),
-                            "surname": self.TA_surname_LE.text()
-                        }
+                cur.execute("""
+                    INSERT INTO application (
+                        email, password, first_name, last_name, phone, city, gender, birthdate, status
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, False))
 
-                        with open("TA_tobecreated.json", "w") as pendinginfo:
-                            json.dump(pending_accounts, pendinginfo, indent=2)
-
-                        stackedWidget.setCurrentIndex(0)
-
-                except FileNotFoundError:
-                    self.show_error_message("The accounts file is not found. Please check if the file exists.")
-                except json.JSONDecodeError:
-                    self.show_error_message("Error decoding JSON. Please check the file format.")
-                except Exception as e:
-                    self.show_error_message(f"An unexpected error occurred while processing the accounts file: {str(e)}")
-
-        except FileNotFoundError:
-            self.show_error_message("The pending accounts file is not found. Please check if the file exists.")
-        except json.JSONDecodeError:
-            self.show_error_message("Error decoding JSON. Please check the file format.")
+                good_to_go = True
+                self.show_success_message("Your application is received. It will be activated after confirmation. Thank you.")
+        
         except Exception as e:
-            self.show_error_message(f"An unexpected error occurred while processing the pending accounts file: {str(e)}")
+            self.show_error_message(f"An unexpected error occurred: {str(e)}")
+
+        finally:
+            # Close database connection
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
 
     def clear_line_edits_contactadmin(self):
         """
@@ -494,7 +484,6 @@ class User_Profile(QMainWindow):
     def __init__(self):
         super(User_Profile, self).__init__()
         loadUi('user_profile_information.ui', self)
-        self.db_trans = db_trans  # Assuming db_trans is passed as an argument
         self.save_pushButton.clicked.connect(self.save_profile)
         self.Back_Button.clicked.connect(self.switch_previous_form)
 
@@ -1723,7 +1712,6 @@ if __name__ == '__main__':
 
     # Construct the database URL
     db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
-    db_trans = db_transactions(db_url)
 
     login = Login()
     signup = Signup()
