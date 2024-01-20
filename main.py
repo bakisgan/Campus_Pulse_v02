@@ -259,6 +259,7 @@ class Signup(QMainWindow):
             if cur:
                 cur.close()
             if conn:
+                conn.commit()
                 conn.close()
 
                                             
@@ -453,6 +454,7 @@ class ContactAdmin(QMainWindow):
             if cur:
                 cur.close()
             if conn:
+                conn.commit()
                 conn.close()
 
     def clear_line_edits_contactadmin(self):
