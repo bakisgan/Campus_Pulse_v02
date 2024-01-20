@@ -8,10 +8,52 @@ import re
 from datetime import datetime
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMessageBox
+from passlib.hash import bcrypt
+import psycopg2
 
 
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+
+
+# Database connection details
+database_name = "db_campusv2"
+user = "postgres"
+password = "MerSer01"
+host = "localhost"
+port = "5432"
+
+global_user_id = None
+# Construct the database URL
+db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
+
+# Database transactions class
+class db_transactions:
+    def __init__(self, db_url):
+        self.conn = psycopg2.connect(db_url)
+        self.cur = self.conn.cursor()
+
+    def run_query(self, query, data=None):
+        try:
+            self.cur.execute(query, data)
+            self.conn.commit()
+        except Exception as e:
+            print(f"Error: {e}")
+            self.conn.rollback()
+
+    def fetch_data(self, query, data=None):
+        try:
+            self.cur.execute(query, data)
+            return self.cur.fetchall()
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+
+    def close_connection(self):
+        self.cur.close()
+        self.conn.close()
+
+
 
 class Login(QMainWindow):
     """
@@ -36,7 +78,8 @@ class Login(QMainWindow):
 
         self.signup_btn.clicked.connect(self.switch_signupform)
         self.contact_adm_btn.clicked.connect(self.switch_adminform)
-        self.loginbutton.clicked.connect(self.switch_student)
+        self.loginbutton.clicked.connect(lambda: self.switch_student(db_trans))
+
 
 
     def switch_signupform(self):
@@ -54,9 +97,9 @@ class Login(QMainWindow):
         """
         stackedWidget.setCurrentIndex(2)
         cont_admin.clear_line_edits_contactadmin()
-    
-    
-    def switch_student(self):
+
+
+    def switch_student(self,db_trans):
         """
         Initiates the login process when the login button is clicked.
 
@@ -67,21 +110,27 @@ class Login(QMainWindow):
         email = self.email_LE.text()
         password = self.password_LE.text()
         try:
-            with open("accounts.json", "r") as userinfo:
-                accounts = json.load(userinfo)
-                userprofile.name_line.setText(accounts[email]["name"])
-                userprofile.surname_line.setText(accounts[email]["surname"])
-                userprofile.telephone_line.setText(accounts[email]["Phone"])
-                userprofile.mail_line.setText(accounts[email]["Email"])
-                userprofile.type_line.setText(accounts[email]["Account_Type"])
-                userprofile.gender_line.setText(accounts[email]["Gender"])
-                userprofile.birthdate_line.setText(accounts[email]["DoB"])
-                student.label_2.setText("Welcome, "+accounts[email]["name"])
-                student.label.setText(accounts[email]["name"]+" "+accounts[email]["surname"])
+            stored_password_data = db_trans.fetch_data("SELECT password FROM usertable WHERE email = %s", (email,))
+            if stored_password_data:
+                stored_hashed_password = stored_password_data[0][0]
+                password_match = bcrypt.verify(password, stored_hashed_password)
+                if password_match:
+                    user_data = db_trans.fetch_data("SELECT * FROM usertable WHERE email = %s", (email,))
+                    if user_data:
+                        account_type = user_data[0][9]  
+                        user_id = user_data[0][0]
+                        global_user_id = user_id
+                        userprofile.name_line.setText(user_data[0][3])
+                        userprofile.surname_line.setText(user_data[0][4])
+                        userprofile.telephone_line.setText(user_data[0][5])
+                        userprofile.mail_line.setText(user_data[0][1])
+                        userprofile.type_line.setText(user_data[0][9])
+                        userprofile.gender_line.setText(user_data[0][7])
+                        userprofile.birthdate_line.setText(user_data[0][8].strftime('%Y-%m-%d'))
+                        student.label_2.setText("Welcome, "+user_data[0][3])
+                        student.label.setText(user_data[0][3] + " " + user_data[0][4])
 
-                if email in accounts:
-                    if accounts[email]["password"] == password:
-                        if accounts[email]["Account_Type"] == "Student":
+                        if account_type == "Student":
                             stackedWidget.setCurrentIndex(3)
                             student.load_attendance()
                             student.load_tasks()
@@ -91,41 +140,38 @@ class Login(QMainWindow):
                             student.populate_table()
                             student.show_announcements()
 
-                        elif accounts[email]["Account_Type"] == "Teacher":
-                            teacher.task_manager.load_data()
-                            teacher.populate_students_list()
-                            teacher.populate_todo_list()
-                            teacher.populate_students_table()
-                            teacher.populate_attendance_table()
-                            teacher.populate_mentor_attendance_table()
-                            teacher.connect_table_signals() 
+                        elif account_type == "Teacher":
+                            # teacher.task_manager.load_data()
+                            # teacher.populate_students_list()
+                            # teacher.populate_todo_list()
+                            # teacher.populate_students_table()
+                            # teacher.populate_attendance_table()
+                            # teacher.populate_mentor_attendance_table()
+                            # teacher.connect_table_signals() 
                             stackedWidget.setCurrentIndex(4)
-                            teacher.pushButton_switchadmin.hide()
-                            teacher.label_Name.setText("Welcome "+accounts[login.email_LE.text()]["name"]+" "+accounts[login.email_LE.text()]["surname"])
-                        
-                        elif accounts[email]["Account_Type"] == "Admin":
-                            teacher.task_manager.load_data()
-                            teacher.populate_students_list()
-                            teacher.populate_todo_list()
-                            teacher.populate_students_table()
-                            teacher.populate_attendance_table()
-                            teacher.populate_mentor_attendance_table()
-                            teacher.pushButton_switchadmin.show()
+                            # teacher.pushButton_switchadmin.hide()
+                            teacher.label_Name.setText(f"Welcome {user_data[0][2]} {user_data[0][3]}")
+
+                        elif account_type == "Admin":
+                            # teacher.task_manager.load_data()
+                            # teacher.populate_students_list()
+                            # teacher.populate_todo_list()
+                            # teacher.populate_students_table()
+                            # teacher.populate_attendance_table()
+                            # teacher.populate_mentor_attendance_table()
+                            # teacher.pushButton_switchadmin.show()
                             stackedWidget.setCurrentIndex(5)
-                            teacher.label_Name.setText("Welcome "+accounts[login.email_LE.text()]["name"]+" "+accounts[login.email_LE.text()]["surname"])
-                            admin.fill_table()
-
+                            teacher.label_Name.setText(f"Welcome {user_data[0][2]} {user_data[0][3]}")
+                            # admin.fill_table()
                     else:
-                        self.show_error_message("The entered password is incorrect. Please verify and re-enter your password to proceed.")  # password is wrong
+                        self.show_error_message("User not found.")
                 else:
-                    self.show_error_message("The provided email does not exist in our records. If you need to create an account, please click on the 'Sign Up' button.")  # email doesn't exist
-
-        except FileNotFoundError:
-            self.show_error_message("The accounts file is not found. Please check if the file exists.")
-        except json.JSONDecodeError:
-            self.show_error_message("Error decoding JSON. Please check the file format.")
+                    self.show_error_message("Incorrect password.")
+            else:
+                self.show_error_message("User not found.")
         except Exception as e:
-            self.show_error_message(f"No records found: {str(e)}")
+            self.show_error_message(f"Error: {str(e)}")
+
 
     def show_error_message(self, message): #error messages
         error_box = QMessageBox()
@@ -423,28 +469,42 @@ class User_Profile(QMainWindow):
         loadUi('user_profile_information.ui', self)
         self.save_pushButton.clicked.connect(self.save_profile)
         self.Back_Button.clicked.connect(self.switch_previous_form)
-        
-    def save_profile(self):
-        user_mail=login.email_LE.text()
-        with open("accounts.json", "r") as userinfo:
-            accounts = json.load(userinfo)
-        accounts[user_mail]["name"]=userprofile.name_line.text()
-        accounts[user_mail]["surname"]=userprofile.surname_line.text()
-        accounts[user_mail]["Phone"]=userprofile.telephone_line.text()
-        accounts[user_mail]["Gender"]=userprofile.gender_line.text()
-        accounts[user_mail]["DoB"]=userprofile.birthdate_line.text()
 
-        with open("accounts.json", "w") as userinfo:
-            json.dump(accounts, userinfo, indent=2)
+    def save_profile(self):
+
+        try:
+            # Fetch the existing user data from the database
+            user_data = self.db_trans.fetch_data("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
+            if user_data:
+                # Update user information
+                self.db_trans.run_query("""
+                    UPDATE usertable
+                    SET first_name = %s, last_name = %s, phone = %s, gender = %s, birthdate = %s
+                    WHERE user_id = %s
+                """, (
+                    userprofile.name_line.text(),
+                    userprofile.surname_line.text(),
+                    userprofile.telephone_line.text(),
+                    userprofile.gender_line.text(),
+                    userprofile.birthdate_line.text(),
+                    global_user_id
+                ))
+
+                self.show_success_message("Profile saved successfully.")
+            else:
+                self.show_error_message("User not found.")
+        except Exception as e:
+            self.show_error_message(f"Error: {str(e)}")
+
 
     def switch_previous_form(self):
-        with open("accounts.json", "r") as userinfo:
-            accounts = json.load(userinfo)
-        if accounts[login.email_LE.text()]["Account_Type"]=="Student":
+        # Fetch the existing user data from the database
+        user_data = self.db_trans.fetch_data("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
+        if user_data[0][9]=="Student":
             stackedWidget.setCurrentIndex(3)
-        elif accounts[login.email_LE.text()]["Account_Type"]=="Teacher":
+        elif user_data[0][9]=="Teacher":
             stackedWidget.setCurrentIndex(4)
-        elif accounts[login.email_LE.text()]["Account_Type"]=="Admin":
+        elif user_data[0][9]=="Admin":
             stackedWidget.setCurrentIndex(5)
 
 
@@ -1608,6 +1668,14 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     stackedWidget = QStackedWidget()
+    database_name = "db_campusv2"
+    user = "postgres"
+    password = "MerSer01"
+    host = "localhost"
+    port = "5432"
+
+    # Construct the database URL
+    db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
 
     login = Login()
     signup = Signup()
@@ -1617,6 +1685,7 @@ if __name__ == '__main__':
     admin=Admin()
     chatboard=Chatboard()
     userprofile=User_Profile()
+    db_trans = db_transactions(db_url)
 
 
 
