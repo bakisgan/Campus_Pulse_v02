@@ -53,6 +53,12 @@ class db_transactions:
         self.cur.close()
         self.conn.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close_connection()
+
 
 
 class Login(QMainWindow):
@@ -78,7 +84,7 @@ class Login(QMainWindow):
 
         self.signup_btn.clicked.connect(self.switch_signupform)
         self.contact_adm_btn.clicked.connect(self.switch_adminform)
-        self.loginbutton.clicked.connect(lambda: self.switch_student(db_trans))
+        self.loginbutton.clicked.connect(self.switch_student)
 
 
 
@@ -99,7 +105,7 @@ class Login(QMainWindow):
         cont_admin.clear_line_edits_contactadmin()
 
 
-    def switch_student(self,db_trans):
+    def switch_student(self):
         """
         Initiates the login process when the login button is clicked.
 
@@ -109,26 +115,37 @@ class Login(QMainWindow):
         """
         email = self.email_LE.text()
         password = self.password_LE.text()
+        global global_user_id
+        global db_url
+
         try:
-            stored_password_data = db_trans.fetch_data("SELECT password FROM usertable WHERE email = %s", (email,))
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            cur.execute("SELECT password FROM usertable WHERE email = %s", (email,))
+
+            stored_password_data = cur.fetchone()
             if stored_password_data:
-                stored_hashed_password = stored_password_data[0][0]
+                stored_hashed_password = stored_password_data[0]
                 password_match = bcrypt.verify(password, stored_hashed_password)
+
                 if password_match:
-                    user_data = db_trans.fetch_data("SELECT * FROM usertable WHERE email = %s", (email,))
+                    # Fetch user data
+                    cur.execute("SELECT * FROM usertable WHERE email = %s", (email,))
+                    user_data = cur.fetchone()
+
                     if user_data:
-                        account_type = user_data[0][9]  
-                        user_id = user_data[0][0]
-                        global_user_id = user_id
-                        userprofile.name_line.setText(user_data[0][3])
-                        userprofile.surname_line.setText(user_data[0][4])
-                        userprofile.telephone_line.setText(user_data[0][5])
-                        userprofile.mail_line.setText(user_data[0][1])
-                        userprofile.type_line.setText(user_data[0][9])
-                        userprofile.gender_line.setText(user_data[0][7])
-                        userprofile.birthdate_line.setText(user_data[0][8].strftime('%Y-%m-%d'))
-                        student.label_2.setText("Welcome, "+user_data[0][3])
-                        student.label.setText(user_data[0][3] + " " + user_data[0][4])
+                        global_user_id = user_data[0]
+                        account_type = user_data[9]
+                        
+                        userprofile.name_line.setText(user_data[3])
+                        userprofile.surname_line.setText(user_data[4])
+                        userprofile.telephone_line.setText(user_data[5])
+                        userprofile.mail_line.setText(user_data[1])
+                        userprofile.type_line.setText(user_data[9])
+                        userprofile.gender_line.setText(user_data[7])
+                        userprofile.birthdate_line.setText(user_data[8].strftime('%Y-%m-%d'))
+                        student.label_2.setText("Welcome, " + user_data[3])
+                        student.label.setText(user_data[3] + " " + user_data[4])
 
                         if account_type == "Student":
                             stackedWidget.setCurrentIndex(3)
@@ -141,6 +158,7 @@ class Login(QMainWindow):
                             student.show_announcements()
 
                         elif account_type == "Teacher":
+                            stackedWidget.setCurrentIndex(4)
                             # teacher.task_manager.load_data()
                             # teacher.populate_students_list()
                             # teacher.populate_todo_list()
@@ -150,7 +168,7 @@ class Login(QMainWindow):
                             # teacher.connect_table_signals() 
                             stackedWidget.setCurrentIndex(4)
                             # teacher.pushButton_switchadmin.hide()
-                            teacher.label_Name.setText(f"Welcome {user_data[0][2]} {user_data[0][3]}")
+                            teacher.label_Name.setText(f"Welcome {user_data[2]} {user_data[3]}")
 
                         elif account_type == "Admin":
                             # teacher.task_manager.load_data()
@@ -161,16 +179,25 @@ class Login(QMainWindow):
                             # teacher.populate_mentor_attendance_table()
                             # teacher.pushButton_switchadmin.show()
                             stackedWidget.setCurrentIndex(5)
-                            teacher.label_Name.setText(f"Welcome {user_data[0][2]} {user_data[0][3]}")
+                            teacher.label_Name.setText(f"Welcome {user_data[2]} {user_data[3]}")
                             # admin.fill_table()
+
                     else:
                         self.show_error_message("User not found.")
                 else:
                     self.show_error_message("Incorrect password.")
             else:
                 self.show_error_message("User not found.")
+
         except Exception as e:
             self.show_error_message(f"Error: {str(e)}")
+
+        finally:
+            # Close database connection
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
 
 
     def show_error_message(self, message): #error messages
@@ -209,10 +236,10 @@ class Signup(QMainWindow):
         """
         super(Signup, self).__init__()
         loadUi('signup.ui', self)
-        self.sign_up_but.clicked.connect(self.signup_swt_login)
+        self.sign_up_but.clicked.connect(lambda: self.signup_swt_login(db_trans))
         self.Back_Log_but.clicked.connect(self.switch_loginform)
 
-    def signup_swt_login(self):
+    def signup_swt_login(self,db_trans):
         """
         Initiates the signup process when the signup button is clicked.
 
@@ -221,44 +248,44 @@ class Signup(QMainWindow):
         to the 'accounts.json' file and switches to the login form.
         """
         email = self.signup_email_LE.text()
-        password = self.signup_password_LE.text()
-        password_conf= self.confirmpass_LE.text()
+        plain_password = self.signup_password_LE.text()
+        plain_password_conf= self.confirmpass_LE.text()
+        first_name = self.name_LE.text()
+        last_name = self.surname_LE.text()
+        phone = self.phone_LE.text()
+        city = self.city_LE.text()
+        gender = None
+        birthdate = None
+        user_type = "Student"
+        application_id = None
         good_to_go=False
+
         try:
-            with open("accounts.json", "r") as userinfo:
-                accounts = json.load(userinfo)
+            # Check for existing user in the database
+            existing_user = db_trans.fetch_data("SELECT user_id FROM usertable WHERE email = %s", (email,))
+            if existing_user:
+                self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
+            elif plain_password != plain_password_conf:
+                self.show_error_message("The passwords entered do not match. Please ensure that the passwords are identical and try again.")
+            elif not self.password_strength(plain_password):
+                self.show_error_message("Please use at least 2 uppercase, 2 lowercase, and 2 special characters. Minimum length is 8 characters.")
+            else:
+                hashed_password = bcrypt.hash(plain_password)
 
-                if email in accounts:
-                    self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")  # email exists. if you have an account go to login page.
-                elif password != password_conf:
-                    self.show_error_message("The passwords entered do not match. Please ensure that the passwords are identical and try again.")
-                elif not self.password_strength(password):
-                    self.show_error_message("Please use at least 2 uppercase, 2 lowercase, and 2 special characters. Minimum length is 8 characters.")
-                else:
-                    accounts[email] = {
-                        "password": password,
-                        "Account_Type": "Student",
-                        "name": self.name_LE.text(),
-                        "surname": self.surname_LE.text(),
-                        "Email": email,
-                        "Gender": "",
-                        "DoB": "",
-                        "Phone": ""
-                    }
-                    good_to_go = True
+                db_trans.run_query("""
+                    INSERT INTO usertable (
+                        email, password, first_name, last_name, phone, city, gender, birthdate, user_type, status, application_id
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, user_type, True, application_id))
 
-        except FileNotFoundError:
-            self.show_error_message("The accounts file is not found. Please check if the file exists.")
-        except json.JSONDecodeError:
-            self.show_error_message("Error decoding JSON. Please check the file format.")
+                good_to_go = True
+        
         except Exception as e:
             self.show_error_message(f"An unexpected error occurred: {str(e)}")
 
                                             
         if good_to_go:
             try:
-                with open("accounts.json", "w") as userinfo:
-                    json.dump(accounts, userinfo, indent=2)
                 stackedWidget.setCurrentIndex(0)
                 login.clear_line_edits_loginform()
             except Exception as e:
@@ -467,45 +494,65 @@ class User_Profile(QMainWindow):
     def __init__(self):
         super(User_Profile, self).__init__()
         loadUi('user_profile_information.ui', self)
+        self.db_trans = db_trans  # Assuming db_trans is passed as an argument
         self.save_pushButton.clicked.connect(self.save_profile)
         self.Back_Button.clicked.connect(self.switch_previous_form)
 
     def save_profile(self):
-
         try:
-            # Fetch the existing user data from the database
-            user_data = self.db_trans.fetch_data("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
-            if user_data:
-                # Update user information
-                self.db_trans.run_query("""
-                    UPDATE usertable
-                    SET first_name = %s, last_name = %s, phone = %s, gender = %s, birthdate = %s
-                    WHERE user_id = %s
-                """, (
-                    userprofile.name_line.text(),
-                    userprofile.surname_line.text(),
-                    userprofile.telephone_line.text(),
-                    userprofile.gender_line.text(),
-                    userprofile.birthdate_line.text(),
-                    global_user_id
-                ))
+            global db_url
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            cur.execute("""
+                        UPDATE usertable
+                        SET first_name = %s, last_name = %s, phone = %s, gender = %s, birthdate = %s
+                        WHERE email = %s
+                    """, (
+                        self.name_line.text(),
+                        self.surname_line.text(),
+                        self.telephone_line.text(),
+                        self.gender_line.text(),
+                        self.birthdate_line.text(),
+                        "serkanbakisgan1@gmail.com"
+                    ))
 
-                self.show_success_message("Profile saved successfully.")
-            else:
-                self.show_error_message("User not found.")
+            conn.commit()
         except Exception as e:
-            self.show_error_message(f"Error: {str(e)}")
-
+            # Handle the exception (show error message, log, etc.)
+            print(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()
 
     def switch_previous_form(self):
-        # Fetch the existing user data from the database
-        user_data = self.db_trans.fetch_data("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
-        if user_data[0][9]=="Student":
-            stackedWidget.setCurrentIndex(3)
-        elif user_data[0][9]=="Teacher":
-            stackedWidget.setCurrentIndex(4)
-        elif user_data[0][9]=="Admin":
-            stackedWidget.setCurrentIndex(5)
+        try:
+            # Fetch the existing user data from the database
+            with self.db_trans as db:
+                user_data = db.fetch_data("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
+                if user_data and user_data[0][9] == "Student":
+                    stackedWidget.setCurrentIndex(3)
+                elif user_data and user_data[0][9] == "Teacher":
+                    stackedWidget.setCurrentIndex(4)
+                elif user_data and user_data[0][9] == "Admin":
+                    stackedWidget.setCurrentIndex(5)
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            self.show_error_message(f"Error: {str(e)}")
+
+    def show_error_message(self, message):  # error messages
+        error_box = QMessageBox()
+        error_box.setIcon(QMessageBox.Critical)
+        error_box.setWindowTitle("Error")
+        error_box.setText(message)
+        error_box.exec_()
+
+    def show_success_message(self, message):  # Add this method
+        success_box = QMessageBox()
+        success_box.setIcon(QMessageBox.Information)
+        success_box.setWindowTitle("Success")
+        success_box.setText(message)
+        success_box.exec_()
+
 
 
 class Admin(QMainWindow):
@@ -1676,6 +1723,7 @@ if __name__ == '__main__':
 
     # Construct the database URL
     db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
+    db_trans = db_transactions(db_url)
 
     login = Login()
     signup = Signup()
@@ -1685,7 +1733,6 @@ if __name__ == '__main__':
     admin=Admin()
     chatboard=Chatboard()
     userprofile=User_Profile()
-    db_trans = db_transactions(db_url)
 
 
 

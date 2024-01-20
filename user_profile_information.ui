@@ -167,7 +167,7 @@ border-radius: 15px; </string>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>340</x>
+      <x>410</x>
       <y>340</y>
       <width>101</width>
       <height>41</height>
@@ -182,48 +182,14 @@ border-radius: 15px; </string>
     <property name="text">
      <string>Type</string>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
    </widget>
    <widget class="QLineEdit" name="name_line">
     <property name="geometry">
      <rect>
       <x>140</x>
-      <y>80</y>
-      <width>251</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">border-radius: 15px; 
-background-color: rgb(255, 255, 255);</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="save_pushButton">
-    <property name="geometry">
-     <rect>
-      <x>590</x>
-      <y>480</y>
-      <width>181</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>15</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(200, 172, 148);</string>
-    </property>
-    <property name="text">
-     <string>SAVE</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="telephone_line">
-    <property name="geometry">
-     <rect>
-      <x>520</x>
       <y>80</y>
       <width>251</width>
       <height>41</height>
@@ -248,6 +214,34 @@ background-color: rgb(255, 255, 255);</string>
 background-color: rgb(255, 255, 255);</string>
     </property>
    </widget>
+   <widget class="QLineEdit" name="mail_line">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>290</y>
+      <width>251</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 15px; 
+background-color: rgb(255, 255, 255);</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="telephone_line">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>80</y>
+      <width>251</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 15px; 
+background-color: rgb(255, 255, 255);</string>
+    </property>
+   </widget>
    <widget class="QLineEdit" name="birthdate_line">
     <property name="geometry">
      <rect>
@@ -262,25 +256,11 @@ background-color: rgb(255, 255, 255);</string>
 background-color: rgb(255, 255, 255);</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="mail_line">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>280</y>
-      <width>251</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">border-radius: 15px; 
-background-color: rgb(255, 255, 255);</string>
-    </property>
-   </widget>
    <widget class="QLineEdit" name="gender_line">
     <property name="geometry">
      <rect>
       <x>520</x>
-      <y>280</y>
+      <y>290</y>
       <width>251</width>
       <height>41</height>
      </rect>
@@ -293,8 +273,8 @@ background-color: rgb(255, 255, 255);</string>
    <widget class="QLineEdit" name="type_line">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>380</y>
+      <x>320</x>
+      <y>390</y>
       <width>251</width>
       <height>41</height>
      </rect>
@@ -308,7 +288,7 @@ background-color: rgb(255, 255, 255);</string>
    <widget class="QPushButton" name="Back_Button">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>180</x>
       <y>480</y>
       <width>181</width>
       <height>51</height>
@@ -326,6 +306,29 @@ background-color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Back</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="save_pushButton">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>480</y>
+      <width>181</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(200, 172, 148);</string>
+    </property>
+    <property name="text">
+     <string>SAVE</string>
     </property>
    </widget>
   </widget>
