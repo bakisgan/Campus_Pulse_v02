@@ -382,7 +382,11 @@ class Signup(QMainWindow):
             cur = conn.cursor()
             cur.execute("SELECT user_id FROM usertable WHERE email = %s", (email,))
             existing_user = cur.fetchone()
-            if existing_user:
+            
+            # Validate input fields
+            if not email or not plain_password or not first_name or not phone or not city:
+                self.show_error_message("Please fill in all required fields.")
+            elif existing_user:
                 self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
             elif plain_password != plain_password_conf:
                 self.show_error_message("The passwords entered do not match. Please ensure that the passwords are identical and try again.")
@@ -397,7 +401,7 @@ class Signup(QMainWindow):
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, user_type, True, application_id))
 
-                good_to_go = True
+                registration_successful = True
         
         except Exception as e:
             self.show_error_message(f"An unexpected error occurred: {str(e)}")
@@ -411,7 +415,7 @@ class Signup(QMainWindow):
                 conn.close()
 
                                             
-        if good_to_go:
+        if registration_successful:
             try:
                 stackedWidget.setCurrentIndex(0)
                 login.clear_line_edits_loginform()
