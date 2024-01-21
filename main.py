@@ -1938,6 +1938,16 @@ class MyMainWindow(QMainWindow):
 class TaskManager:
     def __init__(self):
         self.load_data()
+        self.db_connection = self.connect_to_database()
+        
+    def connect_to_database(self):
+        try:
+            # Veritabanına bağlantı
+            connection = psycopg2.connect(db_url)
+            return connection
+        except Exception as e:
+            print(f"Hata: Veritabanına bağlanırken bir sorun oluştu. Hata: {e}")
+            return None
         
     def load_data(self):
         # accounts.json, tasks.json ve announcements.json dosyalarını oku
