@@ -666,16 +666,21 @@ class User_Profile(QMainWindow):
             conn.close()
 
     def switch_previous_form(self):
+        global global_user_id
         try:
+            global db_url
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
+            user_data = cur.fetchone()
+            account_type = user_data[9]
             # Fetch the existing user data from the database
-            with self.db_trans as db:
-                user_data = db.fetch_data("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
-                if user_data and user_data[0][9] == "Student":
-                    stackedWidget.setCurrentIndex(3)
-                elif user_data and user_data[0][9] == "Teacher":
-                    stackedWidget.setCurrentIndex(4)
-                elif user_data and user_data[0][9] == "Admin":
-                    stackedWidget.setCurrentIndex(5)
+            if account_type == "Student":
+                stackedWidget.setCurrentIndex(3)
+            elif account_type == "Teacher":
+                stackedWidget.setCurrentIndex(4)
+            elif account_type == "Admin":
+                stackedWidget.setCurrentIndex(5)
         except Exception as e:
             print(f"Error: {str(e)}")
             self.show_error_message(f"Error: {str(e)}")
