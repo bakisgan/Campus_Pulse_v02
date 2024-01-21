@@ -589,7 +589,7 @@ class ContactAdmin(QMainWindow):
                     INSERT INTO application (
                         email, password, first_name, last_name, phone, city, gender, birthdate, status
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, False))
+                """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, None))
 
                 good_to_go = True
                 self.show_success_message("Your application is received. It will be activated after confirmation. Thank you.")
@@ -684,6 +684,9 @@ class User_Profile(QMainWindow):
         except Exception as e:
             print(f"Error: {str(e)}")
             self.show_error_message(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()
 
     def show_error_message(self, message):  # error messages
         error_box = QMessageBox()
@@ -733,106 +736,112 @@ class Admin(QMainWindow):
 
 
     def fill_table(self):
-       """
+        """
         Fills the table with pending TA account data.
         """
-       try:
-          with open("TA_tobecreated.json", "r") as pendinginfo:
-                pending_accounts = json.load(pendinginfo)
-                row = 0
-                self.tableWidget.setRowCount(len(pending_accounts))
-                for emails in pending_accounts:
-                    checkbox = QCheckBox()
-                    self.tableWidget.setCellWidget(row, 0, checkbox)
-                    self.tableWidget.setItem(row, 1, QTableWidgetItem(emails))
-                    self.tableWidget.setItem(row, 2, QTableWidgetItem(pending_accounts[emails]["name"]))
-                    self.tableWidget.setItem(row, 3, QTableWidgetItem(pending_accounts[emails]["surname"]))
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
 
-                    row += 1
-       except Exception as e:
+             # Fetch the count of pending accounts
+            cur.execute("SELECT count(*) FROM application WHERE status IS NULL;")
+            number_of_accounts = cur.fetchone()[0]
+            row = 0
+            self.tableWidget.setRowCount(number_of_accounts)
+
+            # Fetch the data for pending accounts
+            cur.execute("SELECT application_id, email, first_name, last_name FROM application WHERE status IS NULL;")
+            pending_user_data = cur.fetchall()
+
+            for i in range(number_of_accounts):
+                checkbox = QCheckBox()
+                application_id = pending_user_data[i][0]
+                email = pending_user_data[i][1]
+                first_name= pending_user_data[i][2]
+                last_name = pending_user_data[i][3]
+                self.tableWidget.setCellWidget(row, 0, checkbox)
+                self.tableWidget.setItem(row, 1, QTableWidgetItem(email))
+                self.tableWidget.setItem(row, 2, QTableWidgetItem(first_name))
+                self.tableWidget.setItem(row, 3, QTableWidgetItem(last_name))
+                row += 1
+        except Exception as e:
            print(f"Error loading data: {e}")
+        finally:
+            cur.close()
+            conn.close()
 
 
     def approve_account(self):
         """
         Approves selected accounts and updates the tables accordingly.
         """
-        pendinginfo = open("TA_tobecreated.json", "r")
-        pending_accounts = json.load(pendinginfo)
-        userinfo = open("accounts.json", "r")
-        accounts = json.load(userinfo)
-        pending_accounts_rest=dict()
-        for row in range(self.tableWidget.rowCount()):
-            checkbox = self.tableWidget.cellWidget(row, 0)
-            email_item = self.tableWidget.item(row, 1)
-            email_key = email_item.text() if email_item else None
-            if checkbox.isChecked():
-                if email_key in pending_accounts:
-                    accounts[email_key] = {
-                        "password": pending_accounts[email_key]["password"],
-                        "Account_Type": "Teacher",
-                        "name": pending_accounts[email_key]["name"],
-                        "surname": pending_accounts[email_key]["surname"]
-                    }
-            else:
-                pending_accounts_rest[email_key] = {
-                    "password": pending_accounts[email_key]["password"],
-                    "Account_Type": "Teacher",
-                    "name": pending_accounts[email_key]["name"],
-                    "surname": pending_accounts[email_key]["surname"]
-                 }
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            conn.autocommit = False
+            cur.execute("SELECT * FROM application WHERE status IS NULL;")
+            pending_user_data = cur.fetchall()
+            for row in range(self.tableWidget.rowCount()):
+                checkbox = self.tableWidget.cellWidget(row, 0)
+                email_item = self.tableWidget.item(row, 1)
+                if email_item is not None:
+                    email_key = email_item.text()
+                if checkbox.isChecked():
+                    cur.execute("UPDATE application SET status = TRUE WHERE email = %s",(email_key,))
+                    cur.execute("SELECT * FROM application WHERE email = %s",(email_key,))
+                    selected_user_data = cur.fetchone()
+                    cur.execute("""
+                    INSERT INTO usertable (
+                        email, password, first_name, last_name, phone, city, gender, birthdate, user_type, status, application_id
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (selected_user_data[1], selected_user_data[2], selected_user_data[3], selected_user_data[4], selected_user_data[5], selected_user_data[6], selected_user_data[7], selected_user_data[8], "Teacher", True, selected_user_data[0]))
+            conn.commit()
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+            self.show_error_message(f"Error: {str(e)}")
+        finally:
+            conn.autocommit = True
+            cur.close()
+            conn.close()             
+            self.tableWidget.clearContents()
+            self.fill_table()
+           
 
-                
-        pendinginfo.close()
-        userinfo.close()
-        with open("accounts.json", "w") as userinfo:
-                json.dump(accounts, userinfo, indent=2)
-        with open("TA_tobecreated.json", "w") as pendinginfo:
-                json.dump(pending_accounts_rest, pendinginfo, indent=2)
-        self.tableWidget.clearContents()
-        self.tableWidget.setRowCount(len(pending_accounts_rest))
-        row = 0
-        for emails in pending_accounts_rest:
-            checkbox = QCheckBox()
-            self.tableWidget.setCellWidget(row, 0, checkbox)
-            self.tableWidget.setItem(row, 1, QTableWidgetItem(emails))
-            self.tableWidget.setItem(row, 2, QTableWidgetItem(pending_accounts_rest[emails]["name"]))
-            self.tableWidget.setItem(row, 3, QTableWidgetItem(pending_accounts_rest[emails]["surname"]))
-            row += 1            
 
     def discard_account(self):
         """
         Discards selected accounts and updates the tables accordingly.
         """
-        pendinginfo = open("TA_tobecreated.json", "r")
-        pending_accounts = json.load(pendinginfo)
-        pending_accounts_rest=dict()
-        for row in range(self.tableWidget.rowCount()):
-            checkbox = self.tableWidget.cellWidget(row, 0)
-            email_item = self.tableWidget.item(row, 1)
-            email_key = email_item.text() if email_item else None
-            if not checkbox.isChecked():
-                if email_key in pending_accounts:
-                    pending_accounts_rest[email_key] = {
-                        "password": pending_accounts[email_key]["password"],
-                        "Account_Type": "Teacher",
-                        "name": pending_accounts[email_key]["name"],
-                        "surname": pending_accounts[email_key]["surname"]
-                    }
-             
-        pendinginfo.close()
-        with open("TA_tobecreated.json", "w") as pendinginfo:
-                json.dump(pending_accounts_rest, pendinginfo, indent=2)
-        self.tableWidget.clearContents()
-        self.tableWidget.setRowCount(len(pending_accounts_rest))
-        row = 0
-        for emails in pending_accounts_rest:
-            checkbox = QCheckBox()
-            self.tableWidget.setCellWidget(row, 0, checkbox)
-            self.tableWidget.setItem(row, 1, QTableWidgetItem(emails))
-            self.tableWidget.setItem(row, 2, QTableWidgetItem(pending_accounts_rest[emails]["name"]))
-            self.tableWidget.setItem(row, 3, QTableWidgetItem(pending_accounts_rest[emails]["surname"]))
-            row += 1   
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            conn.autocommit = False
+            cur.execute("SELECT * FROM application WHERE status IS NULL;")
+            pending_user_data = cur.fetchall()
+            for row in range(self.tableWidget.rowCount()):
+                checkbox = self.tableWidget.cellWidget(row, 0)
+                email_item = self.tableWidget.item(row, 1)
+                if email_item is not None:
+                    email_key = email_item.text()
+                if checkbox.isChecked():
+                    cur.execute("UPDATE application SET status = FALSE WHERE email = %s",(email_key,))
+            conn.commit()
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+            self.show_error_message(f"Error: {str(e)}")
+        finally:
+            conn.autocommit = True
+            cur.close()
+            conn.close()             
+            self.tableWidget.clearContents()
+            self.fill_table()
 
     def switch_teacherform(self):
         stackedWidget.setCurrentIndex(4)
