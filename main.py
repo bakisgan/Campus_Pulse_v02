@@ -257,6 +257,7 @@ class Login(QMainWindow):
                         userprofile.type_line.setText(user_data[9])
                         userprofile.gender_line.setText(user_data[7])
                         userprofile.birthdate_line.setText(user_data[8].strftime('%Y-%m-%d'))
+                        userprofile.city_line.setText(user_data[6])
                         student.label_2.setText("Welcome, " + user_data[3])
                         student.label.setText(user_data[3] + " " + user_data[4])
 
@@ -644,7 +645,7 @@ class User_Profile(QMainWindow):
             cur = conn.cursor()
             cur.execute("""
                         UPDATE usertable
-                        SET first_name = %s, last_name = %s, phone = %s, gender = %s, birthdate = %s
+                        SET first_name = %s, last_name = %s, phone = %s, gender = %s, birthdate = %s, city = %s
                         WHERE user_id = %s
                     """, (
                         self.name_line.text(),
