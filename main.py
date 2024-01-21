@@ -1195,12 +1195,14 @@ class MyMainWindow(QMainWindow):
         loadUi("teacher_page.ui", self)
         self.setWindowTitle('Campus Pulse')
         self.task_manager = TaskManager()
-        # self.populate_students_list()
-        # self.populate_todo_list()
-        # self.populate_students_table()
-        # self.populate_attendance_table()
-        # self.populate_mentor_attendance_table()
-        # self.connect_table_signals() 
+        self.pushButton_LessonSave.clicked.connect(self.save_lesson)
+
+        self.populate_students_list()
+        self.populate_todo_list()
+        self.populate_students_table()
+        self.populate_attendance_table()
+        self.populate_mentor_attendance_table()
+        self.connect_table_signals() 
         
     
         self.pushButton_chatbox.clicked.connect(student.switch_chatboard)
@@ -1238,6 +1240,120 @@ class MyMainWindow(QMainWindow):
         self.textEdit_AnnouncementView.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
 
 
+    def populate_coursemeet_list(self):
+        # Ders adlarını çek
+        lessons = self.task_manager.get_lessons()
+
+        # ListWidget'ı doldur
+        self.listWidget_coursemeet.clear()
+        self.listWidget_coursemeet.addItems(lessons)
+        
+        
+    def fetch_announcements_from_database(self):
+        announcements = []
+        try:
+            # Veritabanından anonsları çek
+            with self.db_connection.cursor() as cursor:
+                cursor.execute("SELECT teacher_id, text, deadline FROM announcement")
+                result = cursor.fetchall()
+
+            for row in result:
+                announcement = {
+                    "teacher_id": row[0],
+                    "content": row[1],
+                    "last_date": row[2].strftime("%Y-%m-%d") if row[2] else None
+                }
+                announcements.append(announcement)
+
+        except Exception as e:
+            print(f"Hata: Veritabanından anonsları çekerken bir sorun oluştu. Hata: {e}")
+
+        return announcements
+
+    def update_announcements_from_database(self):
+        # Anonsları güncelle
+        if self.announcement_index < len(self.announcements):
+            announcement = self.announcements[self.announcement_index]
+            last_date = announcement.get("last_date")
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            if last_date >= current_date:
+                self.textEdit_AnnouncementView.clear()
+                self.textEdit_AnnouncementView.append(
+                    f"📢❗🚨   {announcement['content']}   🚨❗📢")
+
+            # Bir sonraki anonsa geç
+            self.announcement_index += 1
+        else:
+            # Anons listesinin sonuna gelindiğinde başa dön
+            self.announcement_index = 0
+
+
+    def connect_to_database():
+        try:
+            # Veritabanına bağlantı
+            connection = psycopg2.connect(db_url)
+            return connection
+        except Exception as e:
+            print(f"Hata: Veritabanına bağlanırken bir sorun oluştu. Hata: {e}")
+            return None
+
+    def save_lesson(self):
+        # Kullanıcı tarafından girilen ders adını al
+        lesson_name = self.textEdit_lesson.toPlainText()
+
+        # Ders adını kontrol et
+        if not lesson_name:
+            QMessageBox.warning(self, 'Uyarı', 'Ders adı boş olamaz.')
+            return
+
+        # Ders adının daha önce eklenip eklenmediğini kontrol et
+        if self.is_lesson_exists(lesson_name):
+            QMessageBox.warning(self, 'Uyarı', 'Bu ders zaten var. Lütfen yeni bir ders giriniz.')
+            return
+
+        # Ders adını veritabanına eklemek için fonksiyonu çağır
+        self.insert_lesson_to_database(lesson_name)
+        QMessageBox.information(self, 'Bilgi', 'Ders başarıyla kaydedildi.')
+
+    def is_lesson_exists(self, lesson_name):
+        try:
+            # Veritabanına bağlantı
+            connection = self.connect_to_database()
+
+            # Ders adını kontrol et
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT * FROM lesson WHERE lesson_name = %s", (lesson_name,))
+                result = cursor.fetchone()
+
+            return result is not None
+
+        except Exception as e:
+            print(f"Hata: Veritabanında sorgu yaparken bir sorun oluştu. Hata: {e}")
+            return False
+
+        finally:
+            # Bağlantıyı kapat
+            connection.close()
+
+    def insert_lesson_to_database(self, lesson_name):
+        try:
+            # Veritabanına bağlantı
+            connection = self.connect_to_database()
+
+            # Ders adını eklemek için sorgu
+            with connection.cursor() as cursor:
+                cursor.execute("INSERT INTO lesson (lesson_name) VALUES (%s)", (lesson_name,))
+
+            # Değişiklikleri kaydet
+            connection.commit()
+
+        except Exception as e:
+            print(f"Hata: Veritabanına yeni kayıt eklerken bir sorun oluştu. Hata: {e}")
+
+        finally:
+            # Bağlantıyı kapat
+            connection.close()
+
     def switch_to_chatboard(self):
         stackedWidget.setCurrentIndex(6)
     
@@ -1249,7 +1365,6 @@ class MyMainWindow(QMainWindow):
                 stackedWidget.setCurrentIndex(5)
             else:
                 pass
-
 
             
     def populate_attendance_table(self):
@@ -1405,24 +1520,28 @@ class MyMainWindow(QMainWindow):
         self.update_table()
 
     def send_announcement(self):
-        # Yeni anons oluştur ve görev yöneticisine bildir
-        announcement_text = self.textEdit_announcementtext.toPlainText()
-        if not announcement_text:
-            QMessageBox.warning(self, "Warning", "Announcement text cannot be empty.")
-            return        
-        
-        last_date_control = self.dateEdit_lastdateofannouncement.date()
-        if  last_date_control < QDate.currentDate():
-            QMessageBox.warning(self, "Warning", "Selected date can not be before the current date.")
-            return  
-        last_date = last_date_control.toString("yyyy-MM-dd")   
-        
-        self.task_manager.create_announcement(announcement_text, last_date)
-        QMessageBox.information(self, "Success", "Announcement created successfully!")
+        try:
+            # Yeni anons oluştur ve görev yöneticisine bildir
+            announcement_text = self.textEdit_announcementtext.toPlainText()
+            if not announcement_text:
+                QMessageBox.warning(self, "Warning", "Announcement text cannot be empty.")
+                return
 
-        # Anons oluşturulduktan sonra formu temizle
-        self.textEdit_announcementtext.clear()
-        self.dateEdit_lastdateofannouncement.clear()
+            last_date_control = self.dateEdit_lastdateofannouncement.date()
+            if last_date_control < QDate.currentDate():
+                QMessageBox.warning(self, "Warning", "Selected date cannot be before the current date.")
+                return
+            last_date = last_date_control.toString("yyyy-MM-dd")
+
+            self.task_manager.create_announcement(announcement_text, last_date)
+            QMessageBox.information(self, "Success", "Announcement created successfully!")
+
+            # Anons oluşturulduktan sonra formu temizle
+            self.textEdit_announcementtext.clear()
+            self.dateEdit_lastdateofannouncement.clear()
+
+        except Exception as e:
+            print(f"Hata: Anons gönderilirken bir sorun oluştu. Hata: {e}")
 
     def populate_todo_list(self):
         self.tableWidget_ToDoList.setRowCount(0)  # Önceki verileri temizle
@@ -1573,28 +1692,6 @@ class TaskManager:
     def __init__(self):
         self.load_data()
 
-    def load_data(self):
-        # accounts.json, tasks.json ve announcements.json dosyalarını oku
-        
-        with open('accounts.json', 'r') as f:
-            self.accounts_data = json.load(f)
-
-        with open('tasks.json', 'r') as f:
-            self.tasks_data = json.load(f)
-
-        try:    
-            with open('attendance.json', 'r') as f:
-                self.attendance_data = json.load(f)    
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.attendance_data = {}
-
-        try:
-            with open('announcements.json', 'r') as f:
-                self.announcements_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.announcements_data = []
-
-
     def populate_students_list(self):
         # accounts.json dosyasındaki 'Student' olan öğrencileri listWidget_StudentList'e ekle
         students = [data for data in self.accounts_data.values() if data.get("Account_Type") == "Student"]
@@ -1604,21 +1701,22 @@ class TaskManager:
             surname = student.get("surname", "")
             self.listWidget_studentlist.addItem(f"{name} {surname} ({email})")
 
+    def get_lessons(self):
+        lessons = []
+        try:
+            # Veritabanından ders adlarını çek
+            with self.db_connection.cursor() as cursor:
+                cursor.execute("SELECT lesson_name FROM lesson")
+                result = cursor.fetchall()
 
-    def save_data(self):
-        # accounts.json, tasks.json ve announcements.json dosyalarına verileri yaz
-        with open('accounts.json', 'w') as f:
-            json.dump(self.accounts_data, f, indent=2)
+            for row in result:
+                lesson_name = row[0]
+                lessons.append(lesson_name)
 
-        with open('tasks.json', 'w') as f:
-            json.dump(self.tasks_data, f, indent=2)
+        except Exception as e:
+            print(f"Hata: Ders adları çekilirken bir sorun oluştu. Hata: {e}")
 
-        with open('announcements.json', 'w') as f:
-            json.dump(self.announcements_data, f, indent=2)
-
-        # attendance.json dosyasına verileri yaz
-        with open('attendance.json', 'w') as f:
-            json.dump(self.attendance_data, f, indent=2)
+        return lessons
             
     def get_all_tasks(self):
         # Tüm görevleri al ve ID'ye göre sırala
@@ -1628,8 +1726,26 @@ class TaskManager:
         return sorted_tasks
 
     def get_students(self):
-        # accounts.json dosyasındaki öğrenci bilgilerini getir
-        students = [data for data in self.accounts_data.values() if data.get("Account_Type") == "Student"]
+        students = []
+        try:
+            # Veritabanından öğrenci bilgilerini çek
+            with self.db_connection.cursor() as cursor:
+                cursor.execute("SELECT user_id, first_name, last_name, email FROM usertable WHERE user_type = 'Student'")
+                result = cursor.fetchall()
+
+            for row in result:
+                student = {
+                    "user_id": row[0],
+                    "name": row[1],
+                    "surname": row[2],
+                    "Email": row[3]
+                    # Eğer daha fazla alan varsa buraya ekleyebilirsiniz
+                }
+                students.append(student)
+
+        except Exception as e:
+            print(f"Hata: Öğrenci bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+
         return students
 
     def get_student_tasks(self, email):
@@ -1669,22 +1785,20 @@ class TaskManager:
         
 
     def create_announcement(self, announcement_text, last_date):
-        # Yeni bir anons oluştur
-        new_announcement = {
-            "content": announcement_text,
-            "last_date": last_date
-        }
+        try:
+            # Veritabanına anonsu ekle
+            teacher_id = global_user_id  # Bu değeri global_user_id olarak aldık
+            date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with self.db_connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO announcement (teacher_id, text, date, deadline) VALUES (%s, %s, %s, %s)",
+                    (teacher_id, announcement_text, date_created, last_date)
+                )
+            self.db_connection.commit()
 
-        # Announcements listesine ekle
-        self.announcements_data.append(new_announcement)
+        except Exception as e:
+            print(f"Hata: Anons oluşturulurken bir sorun oluştu. Hata: {e}")
 
-        # announcements.json dosyasını güncelle
-        self.save_data()
-
-    def get_all_announcements(self):
-        # Tüm anonsları al, last_date'e göre sırala
-        sorted_announcements = sorted(self.announcements_data, key=lambda x: x["last_date"])
-        return sorted_announcements
 
     def update_attendance_data(self, email, meeting_type, date, status):
         if email not in self.attendance_data:
