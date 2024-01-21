@@ -1408,7 +1408,7 @@ class Main_Window(QMainWindow):
 
     def update_announcements(self):
         # Anonsları güncelle
-        self.announcement_textedit.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
+        self.textEdit_announcementtext.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
         if self.announcement_index < len(self.announcements):
             announcement = self.announcements[self.announcement_index]
             last_date = announcement.get("last_date")
@@ -1444,6 +1444,7 @@ class MyMainWindow(QMainWindow):
         self.pushButton_LessonSave.clicked.connect(self.save_lesson)
         self.announcements = []
         self.announcement_index = 0
+        self.db_connection = MyMainWindow.connect_to_database()
 
         self.populate_students_list()
         self.populate_todo_list()
@@ -1451,7 +1452,10 @@ class MyMainWindow(QMainWindow):
         self.populate_attendance_table()
         self.populate_mentor_attendance_table()
         self.connect_table_signals() 
-        
+        self.populate_coursemeet_list()
+        self.fetch_announcements_from_database() 
+        self.update_announcements()
+        print(self.announcements)
     
         self.pushButton_chatbox.clicked.connect(student.switch_chatboard)
         self.pushButton_profile.clicked.connect(student.switch_userprofile)
@@ -1476,18 +1480,20 @@ class MyMainWindow(QMainWindow):
 
         # Send Announcement butonuna tıklandığında
         self.pushButton_SendAnnouncement.clicked.connect(self.send_announcement)
+        
 
         self.announcement_index = 0  # Sıradaki anonsun indeksi
 
         # QTimer oluştur
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_announcements)
-        self.timer.start(5000)  # 5 saniyede bir kontrol et
+        self.timer.start(3000)  # 5 saniyede bir kontrol et
         self.update_announcements()  # Başlangıçta da çalıştır
         self.textEdit_AnnouncementView.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
 
 
     def populate_coursemeet_list(self):
+
         # Ders adlarını çek
         lessons = self.task_manager.get_lessons()
 
@@ -1497,12 +1503,22 @@ class MyMainWindow(QMainWindow):
         
         
     def fetch_announcements_from_database(self):
+        try:
+            # Fetch announcements from the database
+            self.announcements = self.update_announcements_from_database()
+
+        except Exception as e:
+            print(f"Hata: Veritabanından anonsları çekerken bir sorun oluştu. Hata: {e}")
+
+
+    def update_announcements_from_database(self):
+        # Fetch and return announcements from the database
         announcements = []
         try:
-            # Veritabanından anonsları çek
             with self.db_connection.cursor() as cursor:
                 cursor.execute("SELECT teacher_id, text, deadline FROM announcement")
                 result = cursor.fetchall()
+                print(result)
 
             for row in result:
                 announcement = {
@@ -1516,26 +1532,25 @@ class MyMainWindow(QMainWindow):
             print(f"Hata: Veritabanından anonsları çekerken bir sorun oluştu. Hata: {e}")
 
         return announcements
-
-    def update_announcements_from_database(self):
-        # Anonsları güncelle
+    
+    def update_announcements(self):
+        self.textEdit_announcementtext.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
+        
         if self.announcement_index < len(self.announcements):
             announcement = self.announcements[self.announcement_index]
             last_date = announcement.get("last_date")
             current_date = datetime.now().strftime("%Y-%m-%d")
-            if last_date >= current_date:
+            
+            if last_date and current_date and datetime.strptime(last_date, "%Y-%m-%d") >= datetime.strptime(current_date, "%Y-%m-%d"):
                 self.textEdit_AnnouncementView.clear()
-                self.textEdit_AnnouncementView.append(
-                    f"📢❗🚨   {announcement['content']}   🚨❗📢")
+                self.textEdit_AnnouncementView.append(f"📢❗🚨   {announcement['content']}   🚨❗📢")
 
-            # Bir sonraki anonsa geç
             self.announcement_index += 1
         else:
-            # Anons listesinin sonuna gelindiğinde başa dön
-            self.announcement_index = 0
+            self.announcement_index = 0    
 
-
-    def connect_to_database():
+    @classmethod
+    def connect_to_database(cls):
         try:
             # Veritabanına bağlantı
             connection = psycopg2.connect(db_url)
@@ -1563,9 +1578,10 @@ class MyMainWindow(QMainWindow):
         QMessageBox.information(self, 'Bilgi', 'Ders başarıyla kaydedildi.')
 
     def is_lesson_exists(self, lesson_name):
+        connection = None 
         try:
             # Veritabanına bağlantı
-            connection = self.connect_to_database()
+            connection = MyMainWindow.connect_to_database()
 
             # Ders adını kontrol et
             with connection.cursor() as cursor:
@@ -1580,12 +1596,13 @@ class MyMainWindow(QMainWindow):
 
         finally:
             # Bağlantıyı kapat
-            connection.close()
+            if connection:
+                connection.close()
 
     def insert_lesson_to_database(self, lesson_name):
         try:
             # Veritabanına bağlantı
-            connection = self.connect_to_database()
+            connection = MyMainWindow.connect_to_database()
 
             # Ders adını eklemek için sorgu
             with connection.cursor() as cursor:
@@ -1713,12 +1730,14 @@ class MyMainWindow(QMainWindow):
         return list(set(all_dates))
                  
     def update_announcements(self):
+        self.textEdit_announcementtext.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
+
         # Anonsları güncelle
         if self.announcement_index < len(self.announcements):
             announcement = self.announcements[self.announcement_index]
             last_date = announcement.get("last_date")
             current_date = datetime.now().strftime("%Y-%m-%d")
-            if last_date >= current_date:
+            if last_date and last_date >= current_date:
                 self.textEdit_AnnouncementView.clear()
                 self.textEdit_AnnouncementView.append(
                     f"📢❗🚨   {announcement['content']}   🚨❗📢")
@@ -1986,10 +2005,12 @@ class TaskManager:
             with self.db_connection.cursor() as cursor:
                 cursor.execute("SELECT lesson_name FROM lesson")
                 result = cursor.fetchall()
+                print(result)
 
             for row in result:
                 lesson_name = row[0]
                 lessons.append(lesson_name)
+                print(lesson_name)
 
         except Exception as e:
             print(f"Hata: Ders adları çekilirken bir sorun oluştu. Hata: {e}")
