@@ -637,6 +637,7 @@ class User_Profile(QMainWindow):
         self.Back_Button.clicked.connect(self.switch_previous_form)
 
     def save_profile(self):
+        global global_user_id
         try:
             global db_url
             conn = psycopg2.connect(db_url)
@@ -644,14 +645,15 @@ class User_Profile(QMainWindow):
             cur.execute("""
                         UPDATE usertable
                         SET first_name = %s, last_name = %s, phone = %s, gender = %s, birthdate = %s
-                        WHERE email = %s
+                        WHERE user_id = %s
                     """, (
                         self.name_line.text(),
                         self.surname_line.text(),
                         self.telephone_line.text(),
                         self.gender_line.text(),
                         self.birthdate_line.text(),
-                        "serkanbakisgan1@gmail.com"
+                        self.city_line.text(),
+                        global_user_id
                     ))
 
             conn.commit()

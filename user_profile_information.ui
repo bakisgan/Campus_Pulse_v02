@@ -167,7 +167,7 @@ border-radius: 15px; </string>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>410</x>
+      <x>110</x>
       <y>340</y>
       <width>101</width>
       <height>41</height>
@@ -273,7 +273,7 @@ background-color: rgb(255, 255, 255);</string>
    <widget class="QLineEdit" name="type_line">
     <property name="geometry">
      <rect>
-      <x>320</x>
+      <x>140</x>
       <y>390</y>
       <width>251</width>
       <height>41</height>
@@ -329,6 +329,43 @@ background-color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>SAVE</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>490</x>
+      <y>340</y>
+      <width>101</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>City</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="type_line_2">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>390</y>
+      <width>251</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 15px; 
+
+background-color: rgb(255, 255, 255);</string>
     </property>
    </widget>
   </widget>
