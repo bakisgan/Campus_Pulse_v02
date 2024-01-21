@@ -43,7 +43,7 @@ def create_tables():
         "city" VARCHAR(30),
         "gender" VARCHAR(10),
         "birthdate" DATE,
-        "status" BOOLEAN,
+        "status" BOOLEAN
         )
         """,
 
