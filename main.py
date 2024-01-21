@@ -1442,6 +1442,8 @@ class MyMainWindow(QMainWindow):
         self.setWindowTitle('Campus Pulse')
         self.task_manager = TaskManager()
         self.pushButton_LessonSave.clicked.connect(self.save_lesson)
+        self.announcements = []
+        self.announcement_index = 0
 
         self.populate_students_list()
         self.populate_todo_list()
@@ -1475,7 +1477,6 @@ class MyMainWindow(QMainWindow):
         # Send Announcement butonuna tıklandığında
         self.pushButton_SendAnnouncement.clicked.connect(self.send_announcement)
 
-        self.announcements = self.task_manager.get_all_announcements()
         self.announcement_index = 0  # Sıradaki anonsun indeksi
 
         # QTimer oluştur

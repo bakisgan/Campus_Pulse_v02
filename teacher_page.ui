@@ -1060,7 +1060,7 @@ Admin</string>
        <string notr="true">background-color: rgb(228, 192, 180);</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="pushButton_UpdateAnnouncements">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -1097,10 +1097,10 @@ border-radius:10px;</string>
         <widget class="QGroupBox" name="groupBox_2">
          <property name="geometry">
           <rect>
-           <x>640</x>
-           <y>20</y>
+           <x>650</x>
+           <y>10</y>
            <width>201</width>
-           <height>501</height>
+           <height>241</height>
           </rect>
          </property>
          <property name="font">
@@ -1130,9 +1130,9 @@ border-radius:10px;</string>
           <property name="geometry">
            <rect>
             <x>18</x>
-            <y>70</y>
+            <y>40</y>
             <width>171</width>
-            <height>121</height>
+            <height>51</height>
            </rect>
           </property>
           <property name="toolTipDuration">
@@ -1149,7 +1149,7 @@ border-radius:10px;</string>
           <property name="geometry">
            <rect>
             <x>28</x>
-            <y>220</y>
+            <y>100</y>
             <width>171</width>
             <height>20</height>
            </rect>
@@ -1168,9 +1168,9 @@ border-radius:10px;</string>
           <property name="geometry">
            <rect>
             <x>30</x>
-            <y>370</y>
+            <y>180</y>
             <width>151</width>
-            <height>61</height>
+            <height>51</height>
            </rect>
           </property>
           <property name="font">
@@ -1200,7 +1200,7 @@ ANNOUNCEMENT</string>
           <property name="geometry">
            <rect>
             <x>48</x>
-            <y>50</y>
+            <y>20</y>
             <width>121</width>
             <height>20</height>
            </rect>
@@ -1219,7 +1219,7 @@ ANNOUNCEMENT</string>
           <property name="geometry">
            <rect>
             <x>18</x>
-            <y>250</y>
+            <y>120</y>
             <width>171</width>
             <height>41</height>
            </rect>
@@ -1866,15 +1866,237 @@ SAVE</string>
           </property>
          </widget>
         </widget>
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="geometry">
+          <rect>
+           <x>650</x>
+           <y>280</y>
+           <width>201</width>
+           <height>241</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <family>Calibri</family>
+           <pointsize>12</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="toolTipDuration">
+          <number>0</number>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(170, 85, 127);
+border-color: rgb(0, 85, 127);
+color: rgb(0, 0, 0);
+border-radius:10px;</string>
+         </property>
+         <property name="title">
+          <string>Edit/Delete Announcement</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <widget class="QTextEdit" name="textEdit_announcementtext_5">
+          <property name="geometry">
+           <rect>
+            <x>18</x>
+            <y>80</y>
+            <width>171</width>
+            <height>51</height>
+           </rect>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(228, 192, 180);</string>
+          </property>
+          <property name="placeholderText">
+           <string>Please write your announcement text here...</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_announcement_10">
+          <property name="geometry">
+           <rect>
+            <x>28</x>
+            <y>130</y>
+            <width>171</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(0, 0, 0);</string>
+          </property>
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Deadline of the announcement&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_SendAnnouncement_5">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>190</y>
+            <width>71</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Calibri</family>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">border-radius:10px;
+border-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, stop:0 rgba(0, 0, 0, 255), stop:0.19397 rgba(0, 0, 0, 255), stop:0.202312 rgba(122, 97, 0, 255), stop:0.495514 rgba(76, 58, 0, 255), stop:0.504819 rgba(255, 255, 255, 255), stop:0.79 rgba(255, 255, 255, 255), stop:1 rgba(255, 158, 158, 255));
+color: rgb(0, 0, 0);
+background-color: rgb(228, 192, 180);</string>
+          </property>
+          <property name="text">
+           <string>📢
+EDIT</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_announcement_11">
+          <property name="geometry">
+           <rect>
+            <x>48</x>
+            <y>60</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgb(0, 0, 0);</string>
+          </property>
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Announcement Text&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+         <widget class="QDateEdit" name="dateEdit_lastdateofannouncement_5">
+          <property name="geometry">
+           <rect>
+            <x>18</x>
+            <y>150</y>
+            <width>171</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">border-radius:10px;
+color: rgb(0, 0, 0);
+background-color: rgb(228, 192, 180);</string>
+          </property>
+          <property name="dateTime">
+           <datetime>
+            <hour>0</hour>
+            <minute>0</minute>
+            <second>0</second>
+            <year>2024</year>
+            <month>1</month>
+            <day>1</day>
+           </datetime>
+          </property>
+          <property name="time">
+           <time>
+            <hour>0</hour>
+            <minute>0</minute>
+            <second>0</second>
+           </time>
+          </property>
+          <property name="currentSection">
+           <enum>QDateTimeEdit::DaySection</enum>
+          </property>
+          <property name="displayFormat">
+           <string>d/M/yyyy</string>
+          </property>
+          <property name="calendarPopup">
+           <bool>true</bool>
+          </property>
+          <property name="date">
+           <date>
+            <year>2024</year>
+            <month>1</month>
+            <day>1</day>
+           </date>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBox_announcement">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>30</y>
+            <width>151</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(228, 192, 180);</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_SendAnnouncement_6">
+          <property name="geometry">
+           <rect>
+            <x>120</x>
+            <y>190</y>
+            <width>71</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Calibri</family>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">border-radius:10px;
+border-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, stop:0 rgba(0, 0, 0, 255), stop:0.19397 rgba(0, 0, 0, 255), stop:0.202312 rgba(122, 97, 0, 255), stop:0.495514 rgba(76, 58, 0, 255), stop:0.504819 rgba(255, 255, 255, 255), stop:0.79 rgba(255, 255, 255, 255), stop:1 rgba(255, 158, 158, 255));
+color: rgb(0, 0, 0);
+background-color: rgb(228, 192, 180);</string>
+          </property>
+          <property name="text">
+           <string>📢
+DELETE</string>
+          </property>
+         </widget>
+        </widget>
         <zorder>groupBox</zorder>
         <zorder>groupBox_2</zorder>
         <zorder>line</zorder>
         <zorder>line_2</zorder>
         <zorder>groupBox_NewTask</zorder>
         <zorder>groupBox_ne_lesson</zorder>
+        <zorder>groupBox_3</zorder>
        </widget>
       </item>
      </layout>
+    </widget>
+    <widget class="QWidget" name="tab_4">
+     <attribute name="title">
+      <string>Page</string>
+     </attribute>
     </widget>
    </widget>
   </widget>
