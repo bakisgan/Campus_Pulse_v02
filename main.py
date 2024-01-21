@@ -879,6 +879,8 @@ class Chatboard(QMainWindow):
         self.Send_but.clicked.connect(self.send_message)
         self.usertableWidget.itemSelectionChanged.connect(self.selection)
         self.history_LE.setReadOnly(True)
+        # Connect Enter key press event to send_message method
+        self.send_TE.installEventFilter(self)
 
 
     def fill_user_list2(self):
@@ -959,8 +961,7 @@ class Chatboard(QMainWindow):
 
         selected_items = self.usertableWidget.selectedItems()
 
-        # Clear the contents of usertableWidget
-        # self.usertableWidget.clearContents()
+
         self.history_LE.setText("")
 
         if not selected_items:
@@ -1007,7 +1008,7 @@ class Chatboard(QMainWindow):
                         self.history_LE.append(name_of_sender + " : " + str(formatted_time) + "\n" + message + "\n")
                     else:
                         self.history_LE.append(name_of_recepient+ " : " + str(formatted_time) + "\n" + message + "\n")
-                    formatted_date2=formatted_date1
+                    formatted_date1=formatted_date2
                 else:
                     message= i[1]
                     padding = "-" * ((50 - len(formatted_date1)) // 2)
@@ -1016,7 +1017,7 @@ class Chatboard(QMainWindow):
                         self.history_LE.append(name_of_sender + " : " + str(formatted_time) + "\n" + message + "\n")
                     else:
                         self.history_LE.append(name_of_recepient+ " : " + str(formatted_time) + "\n" + message + "\n")   
-                    formatted_date2=formatted_date1                 
+                    formatted_date1=formatted_date2                 
 
         except Exception as e:
             print(f"Error: {str(e)}")
@@ -1031,50 +1032,47 @@ class Chatboard(QMainWindow):
         """
         Sends a message to the selected recipient and updates the chat entries.
         """
+        global global_user_id
+        global db_url
+
         message=self.send_TE.toPlainText()
-        # user_email=login.email_LE.text()
         selected_items = self.usertableWidget.selectedItems()
-        user_email = login.email_LE.text()
+        # user_email = login.email_LE.text()
 
         if not selected_items:
             return
         
         selected_row=selected_items[0].row()
-        recipient=self.usertableWidget.item(selected_row,1).text()
-        
-        with open("chats.json", "r") as chat_file:
-            chat_entries = json.load(chat_file)
-        
-        if user_email not in chat_entries:
-            chat_entries[user_email] = {}
-        
-        chat_entries.setdefault(user_email, {})
-        chat_entries.setdefault(recipient, {})
-        
-        time=datetime.now().timestamp()
-        new_message_key_user = f"message{len(chat_entries[user_email].get(recipient, {})) + 1}"
-        new_message_key_recipient = f"message{len(chat_entries[recipient].get(user_email, {})) + 1}"
-        # new_message_key = f"message{len(chat_entries[user_email][recipient]) + 1}"
+        recipient=int(self.usertableWidget.item(selected_row,1).text())
+        current_time = datetime.now()
+        time = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
-        chat_entries[user_email].setdefault(recipient, {})[new_message_key_user] = {
-        "Time": time,
-        "Status": "Sent",
-        "read": 1,
-        "Message": message
-        }
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
 
-        chat_entries[recipient].setdefault(user_email, {})[new_message_key_recipient] = {
-        "Time": time,
-        "Status": "Received",
-        "read": 0,
-        "Message": message
-        }
+            cur.execute("""
+                INSERT INTO chat (
+                    sender_id, receiver_id, text, date, status
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (global_user_id, recipient, message, time, False))
 
-        with open("chats.json", "w") as chat_file:
-            json.dump(chat_entries, chat_file, indent=2) 
-        
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+        finally:        
+            cur.close()
+            conn.commit()
+            conn.close() 
+
         self.send_TE.setText("")
         self.selection()
+
+    def eventFilter(self, obj, event):
+        if obj is self.send_TE and event.type() == event.KeyPress and event.key() == Qt.Key_Return:
+            self.send_message()
+            return True  # Event handled
+        return super().eventFilter(obj, event)
 
         
     def switch_previous_form(self):
