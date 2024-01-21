@@ -33,7 +33,7 @@ def create_tables():
     # List of CREATE TABLE statements
     create_table_queries = [
         """
-        CREATE TABLE IF NOT EXISTS "Application" (
+        CREATE TABLE IF NOT EXISTS application (
         "application_id" SERIAL PRIMARY KEY,
         "email" VARCHAR(100) UNIQUE NOT NULL,
         "password" VARCHAR(60) NOT NULL,
@@ -48,7 +48,7 @@ def create_tables():
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS "User" (
+        CREATE TABLE IF NOT EXISTS usertable (
         "user_id" SERIAL PRIMARY KEY,
         "email" VARCHAR(100) UNIQUE NOT NULL,
         "password" VARCHAR(60) NOT NULL,
@@ -66,14 +66,14 @@ def create_tables():
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS "Lesson" (
+        CREATE TABLE IF NOT EXISTS lesson (
         "lesson_id" SERIAL PRIMARY KEY,
         "lesson_name" VARCHAR(50)
         )
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS "Calendar" (
+        CREATE TABLE IF NOT EXISTS calendar (
         "calendar_id" SERIAL PRIMARY KEY,
         "lesson_id" INT,
         "teacher_id" INT,
@@ -88,7 +88,7 @@ def create_tables():
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS "Announcement" (
+        CREATE TABLE IF NOT EXISTS announcement (
         "announcement_id" SERIAL PRIMARY KEY,
         "teacher_id" INT,
         "text" VARCHAR(255),
@@ -99,7 +99,7 @@ def create_tables():
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS "Task" (
+        CREATE TABLE IF NOT EXISTS task (
         "task_id" SERIAL PRIMARY KEY,
         "teacher_id" INT,
         "text" VARCHAR(255),
@@ -113,7 +113,7 @@ def create_tables():
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS "Log" (
+        CREATE TABLE IF NOT EXISTS logtable (
         "log_id" SERIAL PRIMARY KEY,
         "user_id" INT,
         "event_type" VARCHAR(50),
@@ -125,7 +125,7 @@ def create_tables():
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS "Chat" (
+        CREATE TABLE IF NOT EXISTS chat (
         "chat_id" SERIAL PRIMARY KEY,
         "sender_id" INT,
         "receiver_id" INT,
@@ -138,7 +138,7 @@ def create_tables():
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS "HashedPasswords" (
+        CREATE TABLE IF NOT EXISTS hashedpasswords (
         "hash_id" SERIAL PRIMARY KEY,
         "user_id" INT UNIQUE NOT NULL,
         "hashed_password" VARCHAR(60) NOT NULL,
@@ -886,67 +886,105 @@ class Chatboard(QMainWindow):
         """
         Fills the user table with user information and unread message counts.
         """
+        global db_url
         try:
-            with open("chats.json", "r") as chatinfo:
-                chat_entries = json.load(chatinfo)
-        except Exception as e:
-            print(f"Error loading data: {e}")
-            return
-        
-        try:
-            with open("accounts.json", "r") as userinfo:
-                user_accounts = json.load(userinfo)
-        except Exception as e:
-            print(f"Error loading data: {e}")
-            return
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
 
-        unread_list=dict()
+             # Fetch the count of pending accounts
+            cur.execute("SELECT count(*) FROM usertable WHERE status IS TRUE;")
+            number_of_accounts = cur.fetchone()[0]
 
-        user_email = login.email_LE.text()
+            cur.execute("SELECT user_id, first_name, last_name, email FROM usertable WHERE status IS TRUE;")
+            pending_user_data = cur.fetchall()
+            row=0
 
+            self.usertableWidget.setRowCount(number_of_accounts)  # Set the row count
 
-        try:
-            for i in user_accounts:
-                unread_count = 0
-                msg_count = 1
-                if i not in chat_entries[user_email]:
-                    unread_list[i] = 0
-                else:
-                    for j in chat_entries[user_email][i]:
-                        messageid = "message" + str(msg_count)
-                        if (
-                            messageid in chat_entries[user_email][i]
-                            and chat_entries[user_email][i][messageid]["read"] == 0
-                            and chat_entries[user_email][i][messageid]["Status"] == "Received"
-                        ):
-                            unread_count += 1
-                        msg_count += 1
-                    unread_list[i] = unread_count
-        except Exception as e:
-            print(f"Error loading data: {e}")
-        
-        row = 0
-        self.usertableWidget.setRowCount(len(user_accounts))
-        self.usertableWidget.setColumnWidth(0, 185)
-        self.usertableWidget.setColumnWidth(1, 0)
-
-
-#Emailin chats.jsonda yer almaması durumunda hata veriyor. Düzeltilmesi gerekiyor.
-        
-
-        for email, data in user_accounts.items():
-            unread_count = unread_list.get(email, 0)
-            if unread_count > 0:
+            for i in range(number_of_accounts):
                 self.usertableWidget.setItem(
                     row,
                     0,
-                    QTableWidgetItem(data["surname"] + ", " + data["name"] + " (" + str(unread_list[email]) + ")"),
+                    QTableWidgetItem(pending_user_data[i][2]+ ", " + pending_user_data[i][1]),
                 )
-                self.usertableWidget.item(row, 0).setBackground(QColor(255, 0, 0))
-            else:
-                self.usertableWidget.setItem(row, 0, QTableWidgetItem(data["surname"] + ", " + data["name"]))
-            self.usertableWidget.setItem(row, 1, QTableWidgetItem(email))
-            row += 1
+                # self.usertableWidget.item(row, 0).setBackground(QColor(255, 0, 0))
+                self.usertableWidget.setItem(row, 1, QTableWidgetItem(pending_user_data[i][0]))
+                self.usertableWidget.setColumnWidth(0, 185)
+                self.usertableWidget.setColumnWidth(1, 0)
+                row += 1
+
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()             
+
+
+
+
+#         try:
+#             with open("chats.json", "r") as chatinfo:
+#                 chat_entries = json.load(chatinfo)
+#         except Exception as e:
+#             print(f"Error loading data: {e}")
+#             return
+        
+#         try:
+#             with open("accounts.json", "r") as userinfo:
+#                 user_accounts = json.load(userinfo)
+#         except Exception as e:
+#             print(f"Error loading data: {e}")
+#             return
+
+#         unread_list=dict()
+
+#         user_email = login.email_LE.text()
+
+
+#         try:
+#             for i in user_accounts:
+#                 unread_count = 0
+#                 msg_count = 1
+#                 if i not in chat_entries[user_email]:
+#                     unread_list[i] = 0
+#                 else:
+#                     for j in chat_entries[user_email][i]:
+#                         messageid = "message" + str(msg_count)
+#                         if (
+#                             messageid in chat_entries[user_email][i]
+#                             and chat_entries[user_email][i][messageid]["read"] == 0
+#                             and chat_entries[user_email][i][messageid]["Status"] == "Received"
+#                         ):
+#                             unread_count += 1
+#                         msg_count += 1
+#                     unread_list[i] = unread_count
+#         except Exception as e:
+#             print(f"Error loading data: {e}")
+        
+#         row = 0
+#         self.usertableWidget.setRowCount(len(user_accounts))
+#         self.usertableWidget.setColumnWidth(0, 185)
+#         self.usertableWidget.setColumnWidth(1, 0)
+
+
+# #Emailin chats.jsonda yer almaması durumunda hata veriyor. Düzeltilmesi gerekiyor.
+        
+
+#         for email, data in user_accounts.items():
+#             unread_count = unread_list.get(email, 0)
+#             if unread_count > 0:
+#                 self.usertableWidget.setItem(
+#                     row,
+#                     0,
+#                     QTableWidgetItem(data["surname"] + ", " + data["name"] + " (" + str(unread_list[email]) + ")"),
+#                 )
+#                 self.usertableWidget.item(row, 0).setBackground(QColor(255, 0, 0))
+#             else:
+#                 self.usertableWidget.setItem(row, 0, QTableWidgetItem(data["surname"] + ", " + data["name"]))
+#             self.usertableWidget.setItem(row, 1, QTableWidgetItem(email))
+#             row += 1
 
     def selection(self):
         """
