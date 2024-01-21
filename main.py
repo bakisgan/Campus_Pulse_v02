@@ -434,10 +434,10 @@ class Signup(QMainWindow):
                 #Insert into logtable
                 cur.execute("select user_id from usertable where email = %s",(email,))
                 user_id=cur.fetchone()[0]
-                
+
                 cur.execute("""
                     INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
-                    VALUES (%s, 'Account', CURRENT_TIMESTAMP, 'Student Account is created', 'Creation')
+                    VALUES (%s, 'Usertable', CURRENT_TIMESTAMP, 'Student Account is created', 'Creation')
                 """, (user_id,))
                 
             except Exception as e:
@@ -596,7 +596,7 @@ class ContactAdmin(QMainWindow):
         birthdate = None
         # user_type = "Teacher"
         global db_url
-        good_to_go=False
+        registration_successful=False
 
         try:
             # Check for existing user in the database
@@ -606,7 +606,12 @@ class ContactAdmin(QMainWindow):
             existing_user_active = cur.fetchone()
             cur.execute("SELECT application_id FROM application WHERE email = %s", (email,))
             existing_user_pending = cur.fetchone()
-            if existing_user_pending:
+
+
+            if not email or not plain_password or not first_name or not phone or not city:
+                self.show_error_message("Please fill in all required fields.")
+                return
+            elif existing_user_pending:
                 self.show_error_message("Your previous application is pending. It will be activated soon!") #status'u kontrol et, active olanlar. yer değiştir
             elif existing_user_active:
                 self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
@@ -623,7 +628,7 @@ class ContactAdmin(QMainWindow):
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, None))
 
-                good_to_go = True
+                registration_successful = True
                 self.show_success_message("Your application is received. It will be activated after confirmation. Thank you.")
         
         except Exception as e:
@@ -636,6 +641,44 @@ class ContactAdmin(QMainWindow):
             if conn:
                 conn.commit()
                 conn.close()
+
+
+        if registration_successful:
+            try:
+
+                # Check for existing user in the database
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                #Insert into logtable
+                cur.execute("select application_id from application where email = %s",(email,))
+                application_id=cur.fetchone()[0]
+                
+                cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Application', CURRENT_TIMESTAMP, 'Teacher Account is requested', 'Creation')
+                """, (application_id,))
+                
+            except Exception as e:
+                self.show_error_message(f"An unexpected error occurred while saving the account information: {str(e)}")
+            finally:
+                # Close database connection
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.commit()
+                    conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
 
     def clear_line_edits_contactadmin(self):
         """
