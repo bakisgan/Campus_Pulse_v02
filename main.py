@@ -1209,6 +1209,8 @@ class Main_Window(QMainWindow):
         
 
 #load file 
+        
+        
 
     def load_attendance(self):
         try:
