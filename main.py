@@ -374,6 +374,7 @@ class Signup(QMainWindow):
         application_id = None
         good_to_go=False
         global db_url
+        registration_successful=False
 
 
         try:
@@ -381,13 +382,16 @@ class Signup(QMainWindow):
             conn = psycopg2.connect(db_url)
             cur = conn.cursor()
             cur.execute("SELECT user_id FROM usertable WHERE email = %s", (email,))
+
             existing_user = cur.fetchone()
             
             # Validate input fields
             if not email or not plain_password or not first_name or not phone or not city:
                 self.show_error_message("Please fill in all required fields.")
+                return
             elif existing_user:
                 self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
+                return
             elif plain_password != plain_password_conf:
                 self.show_error_message("The passwords entered do not match. Please ensure that the passwords are identical and try again.")
             elif not self.password_strength(plain_password):
@@ -401,7 +405,11 @@ class Signup(QMainWindow):
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, user_type, True, application_id))
 
+
+
                 registration_successful = True
+
+
         
         except Exception as e:
             self.show_error_message(f"An unexpected error occurred: {str(e)}")
@@ -419,8 +427,28 @@ class Signup(QMainWindow):
             try:
                 stackedWidget.setCurrentIndex(0)
                 login.clear_line_edits_loginform()
+
+                # Check for existing user in the database
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                #Insert into logtable
+                cur.execute("select user_id from usertable where email = %s",(email,))
+                user_id=cur.fetchone()[0]
+                
+                cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Account', CURRENT_TIMESTAMP, 'Student Account is created', 'Creation')
+                """, (user_id,))
+                
             except Exception as e:
                 self.show_error_message(f"An unexpected error occurred while saving the account information: {str(e)}")
+            finally:
+                # Close database connection
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.commit()
+                    conn.close()
 
 
 
