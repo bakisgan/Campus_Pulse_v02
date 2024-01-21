@@ -961,6 +961,7 @@ class Chatboard(QMainWindow):
 
         # Clear the contents of usertableWidget
         # self.usertableWidget.clearContents()
+        self.history_LE.setText("")
 
         if not selected_items:
             return
@@ -990,7 +991,7 @@ class Chatboard(QMainWindow):
                 return
             
             # Update chat status
-            cur.execute("UPDATE chat SET status = TRUE WHERE receiver_id=%s",(global_user_id,))
+            cur.execute("UPDATE chat SET status = TRUE WHERE receiver_id=%s and sender_id=%s",(global_user_id,recipient))
 
 
             formatted_date1 = chat_data[0][2].strftime("%A, %B %d")
@@ -1003,7 +1004,7 @@ class Chatboard(QMainWindow):
                 if formatted_date1==formatted_date2:
                     message= i[1]
                     if i[0]==global_user_id:
-                        self.history_LE.append(name_of_sender + " " + str(formatted_time) + "\n" + message + "\n")
+                        self.history_LE.append(name_of_sender + " : " + str(formatted_time) + "\n" + message + "\n")
                     else:
                         self.history_LE.append(name_of_recepient+ " : " + str(formatted_time) + "\n" + message + "\n")
                     formatted_date2=formatted_date1
@@ -1012,7 +1013,7 @@ class Chatboard(QMainWindow):
                     padding = "-" * ((50 - len(formatted_date1)) // 2)
                     self.history_LE.append(padding + formatted_date2 + padding+"\n")
                     if i[0]==global_user_id:
-                        self.history_LE.append(name_of_sender + " " + str(formatted_time) + "\n" + message + "\n")
+                        self.history_LE.append(name_of_sender + " : " + str(formatted_time) + "\n" + message + "\n")
                     else:
                         self.history_LE.append(name_of_recepient+ " : " + str(formatted_time) + "\n" + message + "\n")   
                     formatted_date2=formatted_date1                 
@@ -1021,80 +1022,11 @@ class Chatboard(QMainWindow):
             print(f"Error: {str(e)}")
         finally:        
             cur.close()
+            conn.commit()
             conn.close() 
             self.fill_user_list2()
 
 
-
-
-
-
-
-
-
-
-        # for key in chat_entries[user_email][recipient]:
-        #     inner_dict = chat_entries[user_email][recipient][key]
-        #     inner_dict["read"]=1
-
-        # with open("chats.json", "w") as chatinfo:
-        #     json.dump(chat_entries, chatinfo, indent=2)
-        
-
-        # count=0
-
-        # chat_recipient = chat_entries[user_email].get(recipient, {})
-
-        # if not chat_recipient:
-        #     if hasattr(self, 'history_LE'):
-        #         self.history_LE.setText("")
-        #     return
-
-        # for i in chat_entries[user_email][recipient]:
-        #     if count==0:
-        #         time1=chat_entries[user_email][recipient][i]["Time"]
-        #         sender=chat_entries[user_email][recipient][i]["Status"]
-        #         message=chat_entries[user_email][recipient][i]["Message"]
-        #         formatted_date1 = datetime.fromtimestamp(time1).strftime("%A, %B %d")
-        #         formatted_time=datetime.fromtimestamp(time1).strftime("%H:%M")
-        #         padding = "-" * ((50 - len(formatted_date1)) // 2)
-        #         if hasattr(self, 'history_LE'):
-        #             self.history_LE.setText(padding + formatted_date1 + padding + "\n")
-        #             if sender == "Sent":
-        #                 self.history_LE.append("you : " + formatted_time + "\n" + message + "\n")
-        #             else:
-        #                 self.history_LE.insertPlainText(name_of_recepient+ " : " + formatted_time + "\n" + message + "\n")
-
-        #         count+=1
-        #     else:
-        #         time2=chat_entries[user_email][recipient][i]["Time"]
-        #         sender=chat_entries[user_email][recipient][i]["Status"]
-        #         message=chat_entries[user_email][recipient][i]["Message"]
-        #         formatted_date2 = datetime.fromtimestamp(time2).strftime("%A, %B %d")
-        #         formatted_time=datetime.fromtimestamp(time2).strftime("%H:%M")
-        #         if formatted_date1==formatted_date2:
-        #             if sender=="Sent":
-        #                 self.history_LE.append("you : " + formatted_time + "\n" + message+"\n")
-
-        #             else:
-        #                 self.history_LE.append(name_of_recepient + " : " + formatted_time + "\n" + message+"\n")
-
-        #         else:
-        #             padding = "-" * ((50 - len(formatted_date2)) // 2)
-
-        #             self.history_LE.append(padding + formatted_date2 + padding+"\n")
-        #             if sender=="Sent":
-        #                 self.history_LE.append("you : " + formatted_time + "\n" + message+"\n")
-
-        #             else:
-        #                 self.history_LE.append(name_of_recepient + " : " + formatted_time + "\n" + message+"\n")
-
-        #         count+=1
-        #         formatted_date1=formatted_date2        
-
-        # count=0
-        # self.fill_user_list2()
-    
     def send_message(self):
         """
         Sends a message to the selected recipient and updates the chat entries.
