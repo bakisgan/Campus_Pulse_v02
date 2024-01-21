@@ -27,6 +27,153 @@ global_user_id = None
 # Construct the database URL
 db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
 
+
+def create_tables():
+
+    # List of CREATE TABLE statements
+    create_table_queries = [
+        """
+        CREATE TABLE IF NOT EXISTS "Application" (
+        "application_id" SERIAL PRIMARY KEY,
+        "email" VARCHAR(100) UNIQUE NOT NULL,
+        "password" VARCHAR(60) NOT NULL,
+        "first_name" VARCHAR(50),
+        "last_name" VARCHAR(50),
+        "phone" VARCHAR(15),
+        "city" VARCHAR(30),
+        "gender" VARCHAR(10),
+        "birthdate" DATE,
+        "status" BOOLEAN
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS "User" (
+        "user_id" SERIAL PRIMARY KEY,
+        "email" VARCHAR(100) UNIQUE NOT NULL,
+        "password" VARCHAR(60) NOT NULL,
+        "first_name" VARCHAR(50),
+        "last_name" VARCHAR(50),
+        "phone" VARCHAR(15),
+        "city" VARCHAR(30),
+        "gender" VARCHAR(10),
+        "birthdate" DATE,
+        "user_type" VARCHAR(20),
+        "status" BOOLEAN,
+        "application_id" INT,
+        CONSTRAINT "fk_application_id" FOREIGN KEY ("application_id") REFERENCES "Application"("application_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS "Lesson" (
+        "lesson_id" SERIAL PRIMARY KEY,
+        "lesson_name" VARCHAR(50)
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS "Calendar" (
+        "calendar_id" SERIAL PRIMARY KEY,
+        "lesson_id" INT,
+        "teacher_id" INT,
+        "creation_date" TIMESTAMP,
+        "planned_date" TIMESTAMP,
+        "student_id" INT,
+        "status" BOOLEAN,
+        CONSTRAINT fk_lesson FOREIGN KEY ("lesson_id") REFERENCES "Lesson"("lesson_id"),
+        CONSTRAINT fk_teacher FOREIGN KEY ("teacher_id") REFERENCES "User"("user_id"),
+        CONSTRAINT fk_student FOREIGN KEY ("student_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS "Announcement" (
+        "announcement_id" SERIAL PRIMARY KEY,
+        "teacher_id" INT,
+        "text" VARCHAR(255),
+        "date" TIMESTAMP,
+        "deadline" DATE,
+        CONSTRAINT fk_teacher_announcement FOREIGN KEY ("teacher_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS "Task" (
+        "task_id" SERIAL PRIMARY KEY,
+        "teacher_id" INT,
+        "text" VARCHAR(255),
+        "date" TIMESTAMP,
+        "deadline" DATE,
+        "status" BOOLEAN,
+        "student_id" INT,
+        CONSTRAINT fk_teacher_task FOREIGN KEY ("teacher_id") REFERENCES "User"("user_id"),
+        CONSTRAINT fk_student_task FOREIGN KEY ("student_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS "Log" (
+        "log_id" SERIAL PRIMARY KEY,
+        "user_id" INT,
+        "event_type" VARCHAR(50),
+        "time_stamp" TIMESTAMP,
+        "action" VARCHAR(255),
+        "type" VARCHAR(50),
+        CONSTRAINT fk_user_log FOREIGN KEY ("user_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS "Chat" (
+        "chat_id" SERIAL PRIMARY KEY,
+        "sender_id" INT,
+        "receiver_id" INT,
+        "text" VARCHAR(255),
+        "date" TIMESTAMP,
+        "status" BOOLEAN,
+        CONSTRAINT fk_sender FOREIGN KEY ("sender_id") REFERENCES "User"("user_id"),
+        CONSTRAINT fk_receiver FOREIGN KEY ("receiver_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS "HashedPasswords" (
+        "hash_id" SERIAL PRIMARY KEY,
+        "user_id" INT UNIQUE NOT NULL,
+        "hashed_password" VARCHAR(60) NOT NULL,
+        FOREIGN KEY ("user_id") REFERENCES "User"("user_id") ON DELETE CASCADE
+        )
+        """
+    ]
+
+
+    # Connect to the PostgreSQL database
+    conn = psycopg2.connect(db_url)
+
+    # Create a cursor object to interact with the database
+    cur = conn.cursor()
+
+    try:
+        # Execute each CREATE TABLE statement
+        for query in create_table_queries:
+            cur.execute(query)
+
+        # Commit the changes to the database
+        conn.commit()
+
+        print("Tables created successfully!")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+    finally:
+        # Close the cursor and connection
+        cur.close()
+        conn.close()
+
+
+
 class Login(QMainWindow):
     """
     Class representing the login window of the application.
@@ -427,7 +574,7 @@ class ContactAdmin(QMainWindow):
             cur.execute("SELECT application_id FROM application WHERE email = %s", (email,))
             existing_user_pending = cur.fetchone()
             if existing_user_pending:
-                self.show_error_message("Your previous application is pending. It will be activated soon!")
+                self.show_error_message("Your previous application is pending. It will be activated soon!") #status'u kontrol et, active olanlar. yer değiştir
             elif existing_user_active:
                 self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
             elif plain_password != plain_password_conf:
