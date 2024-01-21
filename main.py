@@ -27,6 +27,153 @@ global_user_id = None
 # Construct the database URL
 db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
 
+
+def create_tables():
+
+    # List of CREATE TABLE statements
+    create_table_queries = [
+        """
+        CREATE TABLE IF NOT EXISTS application (
+        "application_id" SERIAL PRIMARY KEY,
+        "email" VARCHAR(100) UNIQUE NOT NULL,
+        "password" VARCHAR(60) NOT NULL,
+        "first_name" VARCHAR(50),
+        "last_name" VARCHAR(50),
+        "phone" VARCHAR(15),
+        "city" VARCHAR(30),
+        "gender" VARCHAR(10),
+        "birthdate" DATE,
+        "status" BOOLEAN
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS usertable (
+        "user_id" SERIAL PRIMARY KEY,
+        "email" VARCHAR(100) UNIQUE NOT NULL,
+        "password" VARCHAR(60) NOT NULL,
+        "first_name" VARCHAR(50),
+        "last_name" VARCHAR(50),
+        "phone" VARCHAR(15),
+        "city" VARCHAR(30),
+        "gender" VARCHAR(10),
+        "birthdate" DATE,
+        "user_type" VARCHAR(20),
+        "status" BOOLEAN,
+        "application_id" INT,
+        CONSTRAINT "fk_application_id" FOREIGN KEY ("application_id") REFERENCES "Application"("application_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS lesson (
+        "lesson_id" SERIAL PRIMARY KEY,
+        "lesson_name" VARCHAR(50)
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS calendar (
+        "calendar_id" SERIAL PRIMARY KEY,
+        "lesson_id" INT,
+        "teacher_id" INT,
+        "creation_date" TIMESTAMP,
+        "planned_date" TIMESTAMP,
+        "student_id" INT,
+        "status" BOOLEAN,
+        CONSTRAINT fk_lesson FOREIGN KEY ("lesson_id") REFERENCES "Lesson"("lesson_id"),
+        CONSTRAINT fk_teacher FOREIGN KEY ("teacher_id") REFERENCES "User"("user_id"),
+        CONSTRAINT fk_student FOREIGN KEY ("student_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS announcement (
+        "announcement_id" SERIAL PRIMARY KEY,
+        "teacher_id" INT,
+        "text" VARCHAR(255),
+        "date" TIMESTAMP,
+        "deadline" DATE,
+        CONSTRAINT fk_teacher_announcement FOREIGN KEY ("teacher_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS task (
+        "task_id" SERIAL PRIMARY KEY,
+        "teacher_id" INT,
+        "text" VARCHAR(255),
+        "date" TIMESTAMP,
+        "deadline" DATE,
+        "status" BOOLEAN,
+        "student_id" INT,
+        CONSTRAINT fk_teacher_task FOREIGN KEY ("teacher_id") REFERENCES "User"("user_id"),
+        CONSTRAINT fk_student_task FOREIGN KEY ("student_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS logtable (
+        "log_id" SERIAL PRIMARY KEY,
+        "user_id" INT,
+        "event_type" VARCHAR(50),
+        "time_stamp" TIMESTAMP,
+        "action" VARCHAR(255),
+        "type" VARCHAR(50),
+        CONSTRAINT fk_user_log FOREIGN KEY ("user_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS chat (
+        "chat_id" SERIAL PRIMARY KEY,
+        "sender_id" INT,
+        "receiver_id" INT,
+        "text" VARCHAR(255),
+        "date" TIMESTAMP,
+        "status" BOOLEAN,
+        CONSTRAINT fk_sender FOREIGN KEY ("sender_id") REFERENCES "User"("user_id"),
+        CONSTRAINT fk_receiver FOREIGN KEY ("receiver_id") REFERENCES "User"("user_id")
+        )
+        """,
+
+        """
+        CREATE TABLE IF NOT EXISTS hashedpasswords (
+        "hash_id" SERIAL PRIMARY KEY,
+        "user_id" INT UNIQUE NOT NULL,
+        "hashed_password" VARCHAR(60) NOT NULL,
+        FOREIGN KEY ("user_id") REFERENCES "User"("user_id") ON DELETE CASCADE
+        )
+        """
+    ]
+
+
+    # Connect to the PostgreSQL database
+    conn = psycopg2.connect(db_url)
+
+    # Create a cursor object to interact with the database
+    cur = conn.cursor()
+
+    try:
+        # Execute each CREATE TABLE statement
+        for query in create_table_queries:
+            cur.execute(query)
+
+        # Commit the changes to the database
+        conn.commit()
+
+        print("Tables created successfully!")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+    finally:
+        # Close the cursor and connection
+        cur.close()
+        conn.close()
+
+
+
 class Login(QMainWindow):
     """
     Class representing the login window of the application.
@@ -109,7 +256,11 @@ class Login(QMainWindow):
                         userprofile.mail_line.setText(user_data[1])
                         userprofile.type_line.setText(user_data[9])
                         userprofile.gender_line.setText(user_data[7])
-                        userprofile.birthdate_line.setText(user_data[8].strftime('%Y-%m-%d'))
+                        if user_data[8] == None:
+                            userprofile.birthdate_line.setText("")
+                        else:
+                            userprofile.birthdate_line.setText(user_data[8].strftime('%Y-%m-%d'))
+                        userprofile.city_line.setText(user_data[6])
                         student.label_2.setText("Welcome, " + user_data[3])
                         student.label.setText(user_data[3] + " " + user_data[4])
 
@@ -226,6 +377,7 @@ class Signup(QMainWindow):
         application_id = None
         good_to_go=False
         global db_url
+        registration_successful=False
 
 
         try:
@@ -233,9 +385,16 @@ class Signup(QMainWindow):
             conn = psycopg2.connect(db_url)
             cur = conn.cursor()
             cur.execute("SELECT user_id FROM usertable WHERE email = %s", (email,))
+
             existing_user = cur.fetchone()
-            if existing_user:
+            
+            # Validate input fields
+            if not email or not plain_password or not first_name or not phone or not city:
+                self.show_error_message("Please fill in all required fields.")
+                return
+            elif existing_user:
                 self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
+                return
             elif plain_password != plain_password_conf:
                 self.show_error_message("The passwords entered do not match. Please ensure that the passwords are identical and try again.")
             elif not self.password_strength(plain_password):
@@ -249,7 +408,11 @@ class Signup(QMainWindow):
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, user_type, True, application_id))
 
-                good_to_go = True
+
+
+                registration_successful = True
+
+
         
         except Exception as e:
             self.show_error_message(f"An unexpected error occurred: {str(e)}")
@@ -263,12 +426,32 @@ class Signup(QMainWindow):
                 conn.close()
 
                                             
-        if good_to_go:
+        if registration_successful:
             try:
                 stackedWidget.setCurrentIndex(0)
                 login.clear_line_edits_loginform()
+
+                # Check for existing user in the database
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                #Insert into logtable
+                cur.execute("select user_id from usertable where email = %s",(email,))
+                user_id=cur.fetchone()[0]
+
+                cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Usertable', CURRENT_TIMESTAMP, 'Student Account is created', 'Creation')
+                """, (user_id,))
+                
             except Exception as e:
                 self.show_error_message(f"An unexpected error occurred while saving the account information: {str(e)}")
+            finally:
+                # Close database connection
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.commit()
+                    conn.close()
 
 
 
@@ -416,7 +599,7 @@ class ContactAdmin(QMainWindow):
         birthdate = None
         # user_type = "Teacher"
         global db_url
-        good_to_go=False
+        registration_successful=False
 
         try:
             # Check for existing user in the database
@@ -426,8 +609,13 @@ class ContactAdmin(QMainWindow):
             existing_user_active = cur.fetchone()
             cur.execute("SELECT application_id FROM application WHERE email = %s", (email,))
             existing_user_pending = cur.fetchone()
-            if existing_user_pending:
-                self.show_error_message("Your previous application is pending. It will be activated soon!")
+
+
+            if not email or not plain_password or not first_name or not phone or not city:
+                self.show_error_message("Please fill in all required fields.")
+                return
+            elif existing_user_pending:
+                self.show_error_message("Your previous application is pending. It will be activated soon!") #status'u kontrol et, active olanlar. yer değiştir
             elif existing_user_active:
                 self.show_error_message("The email address provided already exists in our records. If you have an existing account, please proceed to the login page.")
             elif plain_password != plain_password_conf:
@@ -441,9 +629,9 @@ class ContactAdmin(QMainWindow):
                     INSERT INTO application (
                         email, password, first_name, last_name, phone, city, gender, birthdate, status
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, False))
+                """, (email, hashed_password, first_name, last_name, phone, city, gender, birthdate, None))
 
-                good_to_go = True
+                registration_successful = True
                 self.show_success_message("Your application is received. It will be activated after confirmation. Thank you.")
         
         except Exception as e:
@@ -456,6 +644,34 @@ class ContactAdmin(QMainWindow):
             if conn:
                 conn.commit()
                 conn.close()
+
+
+        if registration_successful:
+            try:
+
+                # Check for existing user in the database
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                #Insert into logtable
+                cur.execute("select application_id from application where email = %s",(email,))
+                application_id=cur.fetchone()[0]
+                
+                cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Application', CURRENT_TIMESTAMP, 'Teacher Account is requested', 'Creation')
+                """, (application_id,))
+                
+            except Exception as e:
+                self.show_error_message(f"An unexpected error occurred while saving the account information: {str(e)}")
+            finally:
+                # Close database connection
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.commit()
+                    conn.close()
+
+
 
     def clear_line_edits_contactadmin(self):
         """
@@ -490,21 +706,23 @@ class User_Profile(QMainWindow):
         self.Back_Button.clicked.connect(self.switch_previous_form)
 
     def save_profile(self):
+        global global_user_id
         try:
             global db_url
             conn = psycopg2.connect(db_url)
             cur = conn.cursor()
             cur.execute("""
                         UPDATE usertable
-                        SET first_name = %s, last_name = %s, phone = %s, gender = %s, birthdate = %s
-                        WHERE email = %s
+                        SET first_name = %s, last_name = %s, phone = %s, gender = %s, birthdate = %s, city = %s
+                        WHERE user_id = %s
                     """, (
                         self.name_line.text(),
                         self.surname_line.text(),
                         self.telephone_line.text(),
                         self.gender_line.text(),
                         self.birthdate_line.text(),
-                        "serkanbakisgan1@gmail.com"
+                        self.city_line.text(),
+                        global_user_id
                     ))
 
             conn.commit()
@@ -516,19 +734,27 @@ class User_Profile(QMainWindow):
             conn.close()
 
     def switch_previous_form(self):
+        global global_user_id
         try:
+            global db_url
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
+            user_data = cur.fetchone()
+            account_type = user_data[9]
             # Fetch the existing user data from the database
-            with self.db_trans as db:
-                user_data = db.fetch_data("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
-                if user_data and user_data[0][9] == "Student":
-                    stackedWidget.setCurrentIndex(3)
-                elif user_data and user_data[0][9] == "Teacher":
-                    stackedWidget.setCurrentIndex(4)
-                elif user_data and user_data[0][9] == "Admin":
-                    stackedWidget.setCurrentIndex(5)
+            if account_type == "Student":
+                stackedWidget.setCurrentIndex(3)
+            elif account_type == "Teacher":
+                stackedWidget.setCurrentIndex(4)
+            elif account_type == "Admin":
+                stackedWidget.setCurrentIndex(5)
         except Exception as e:
             print(f"Error: {str(e)}")
             self.show_error_message(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()
 
     def show_error_message(self, message):  # error messages
         error_box = QMessageBox()
@@ -578,106 +804,125 @@ class Admin(QMainWindow):
 
 
     def fill_table(self):
-       """
+        """
         Fills the table with pending TA account data.
         """
-       try:
-          with open("TA_tobecreated.json", "r") as pendinginfo:
-                pending_accounts = json.load(pendinginfo)
-                row = 0
-                self.tableWidget.setRowCount(len(pending_accounts))
-                for emails in pending_accounts:
-                    checkbox = QCheckBox()
-                    self.tableWidget.setCellWidget(row, 0, checkbox)
-                    self.tableWidget.setItem(row, 1, QTableWidgetItem(emails))
-                    self.tableWidget.setItem(row, 2, QTableWidgetItem(pending_accounts[emails]["name"]))
-                    self.tableWidget.setItem(row, 3, QTableWidgetItem(pending_accounts[emails]["surname"]))
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
 
-                    row += 1
-       except Exception as e:
+             # Fetch the count of pending accounts
+            cur.execute("SELECT count(*) FROM application WHERE status IS NULL;")
+            number_of_accounts = cur.fetchone()[0]
+            row = 0
+            self.tableWidget.setRowCount(number_of_accounts)
+
+            # Fetch the data for pending accounts
+            cur.execute("SELECT application_id, email, first_name, last_name FROM application WHERE status IS NULL;")
+            pending_user_data = cur.fetchall()
+
+            for i in range(number_of_accounts):
+                checkbox = QCheckBox()
+                application_id = pending_user_data[i][0]
+                email = pending_user_data[i][1]
+                first_name= pending_user_data[i][2]
+                last_name = pending_user_data[i][3]
+                self.tableWidget.setCellWidget(row, 0, checkbox)
+                self.tableWidget.setItem(row, 1, QTableWidgetItem(email))
+                self.tableWidget.setItem(row, 2, QTableWidgetItem(first_name))
+                self.tableWidget.setItem(row, 3, QTableWidgetItem(last_name))
+                row += 1
+        except Exception as e:
            print(f"Error loading data: {e}")
+        finally:
+            cur.close()
+            conn.close()
 
 
     def approve_account(self):
         """
         Approves selected accounts and updates the tables accordingly.
         """
-        pendinginfo = open("TA_tobecreated.json", "r")
-        pending_accounts = json.load(pendinginfo)
-        userinfo = open("accounts.json", "r")
-        accounts = json.load(userinfo)
-        pending_accounts_rest=dict()
-        for row in range(self.tableWidget.rowCount()):
-            checkbox = self.tableWidget.cellWidget(row, 0)
-            email_item = self.tableWidget.item(row, 1)
-            email_key = email_item.text() if email_item else None
-            if checkbox.isChecked():
-                if email_key in pending_accounts:
-                    accounts[email_key] = {
-                        "password": pending_accounts[email_key]["password"],
-                        "Account_Type": "Teacher",
-                        "name": pending_accounts[email_key]["name"],
-                        "surname": pending_accounts[email_key]["surname"]
-                    }
-            else:
-                pending_accounts_rest[email_key] = {
-                    "password": pending_accounts[email_key]["password"],
-                    "Account_Type": "Teacher",
-                    "name": pending_accounts[email_key]["name"],
-                    "surname": pending_accounts[email_key]["surname"]
-                 }
-
-                
-        pendinginfo.close()
-        userinfo.close()
-        with open("accounts.json", "w") as userinfo:
-                json.dump(accounts, userinfo, indent=2)
-        with open("TA_tobecreated.json", "w") as pendinginfo:
-                json.dump(pending_accounts_rest, pendinginfo, indent=2)
-        self.tableWidget.clearContents()
-        self.tableWidget.setRowCount(len(pending_accounts_rest))
-        row = 0
-        for emails in pending_accounts_rest:
-            checkbox = QCheckBox()
-            self.tableWidget.setCellWidget(row, 0, checkbox)
-            self.tableWidget.setItem(row, 1, QTableWidgetItem(emails))
-            self.tableWidget.setItem(row, 2, QTableWidgetItem(pending_accounts_rest[emails]["name"]))
-            self.tableWidget.setItem(row, 3, QTableWidgetItem(pending_accounts_rest[emails]["surname"]))
-            row += 1            
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            conn.autocommit = False
+            cur.execute("SELECT * FROM application WHERE status IS NULL;")
+            pending_user_data = cur.fetchall()
+            for row in range(self.tableWidget.rowCount()):
+                checkbox = self.tableWidget.cellWidget(row, 0)
+                email_item = self.tableWidget.item(row, 1)
+                if email_item is not None:
+                    email_key = email_item.text()
+                if checkbox.isChecked():
+                    cur.execute("UPDATE application SET status = TRUE WHERE email = %s",(email_key,))
+                    cur.execute("SELECT * FROM application WHERE email = %s",(email_key,))
+                    selected_user_data = cur.fetchone()
+                    cur.execute("""
+                    INSERT INTO usertable (
+                        email, password, first_name, last_name, phone, city, gender, birthdate, user_type, status, application_id
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (selected_user_data[1], selected_user_data[2], selected_user_data[3], selected_user_data[4], selected_user_data[5], selected_user_data[6], selected_user_data[7], selected_user_data[8], "Teacher", True, selected_user_data[0]))
+                    
+                    cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Usertable', CURRENT_TIMESTAMP, 'Teacher Account is created', 'Creation')
+                """, (global_user_id,))
+                    
+                    cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Application', CURRENT_TIMESTAMP, 'Teacher Account is approved', 'Update')
+                """, (global_user_id,))                   
+                    
+            conn.commit()
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+            self.show_error_message(f"Error: {str(e)}")
+        finally:
+            conn.autocommit = True
+            cur.close()
+            conn.close()             
+            self.tableWidget.clearContents()
+            self.fill_table()
 
     def discard_account(self):
         """
         Discards selected accounts and updates the tables accordingly.
         """
-        pendinginfo = open("TA_tobecreated.json", "r")
-        pending_accounts = json.load(pendinginfo)
-        pending_accounts_rest=dict()
-        for row in range(self.tableWidget.rowCount()):
-            checkbox = self.tableWidget.cellWidget(row, 0)
-            email_item = self.tableWidget.item(row, 1)
-            email_key = email_item.text() if email_item else None
-            if not checkbox.isChecked():
-                if email_key in pending_accounts:
-                    pending_accounts_rest[email_key] = {
-                        "password": pending_accounts[email_key]["password"],
-                        "Account_Type": "Teacher",
-                        "name": pending_accounts[email_key]["name"],
-                        "surname": pending_accounts[email_key]["surname"]
-                    }
-             
-        pendinginfo.close()
-        with open("TA_tobecreated.json", "w") as pendinginfo:
-                json.dump(pending_accounts_rest, pendinginfo, indent=2)
-        self.tableWidget.clearContents()
-        self.tableWidget.setRowCount(len(pending_accounts_rest))
-        row = 0
-        for emails in pending_accounts_rest:
-            checkbox = QCheckBox()
-            self.tableWidget.setCellWidget(row, 0, checkbox)
-            self.tableWidget.setItem(row, 1, QTableWidgetItem(emails))
-            self.tableWidget.setItem(row, 2, QTableWidgetItem(pending_accounts_rest[emails]["name"]))
-            self.tableWidget.setItem(row, 3, QTableWidgetItem(pending_accounts_rest[emails]["surname"]))
-            row += 1   
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            conn.autocommit = False
+            cur.execute("SELECT * FROM application WHERE status IS NULL;")
+            pending_user_data = cur.fetchall()
+            for row in range(self.tableWidget.rowCount()):
+                checkbox = self.tableWidget.cellWidget(row, 0)
+                email_item = self.tableWidget.item(row, 1)
+                if email_item is not None:
+                    email_key = email_item.text()
+                if checkbox.isChecked():
+                    cur.execute("UPDATE application SET status = FALSE WHERE email = %s",(email_key,))
+                    cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Application', CURRENT_TIMESTAMP, 'Teacher Account is not approved', 'Update')
+                """, (global_user_id,))
+            conn.commit()
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+            self.show_error_message(f"Error: {str(e)}")
+        finally:
+            conn.autocommit = True
+            cur.close()
+            conn.close()             
+            self.tableWidget.clearContents()
+            self.fill_table()
 
     def switch_teacherform(self):
         stackedWidget.setCurrentIndex(4)
@@ -710,230 +955,229 @@ class Chatboard(QMainWindow):
         # self.usertableWidget.setColumnCount(2)
         # self.usertableWidget.setHorizontalHeaderLabels([ "","Name"])
         self.usertableWidget.setColumnCount(2)
-        self.usertableWidget.setHorizontalHeaderLabels(["Name","Email"])
-        # self.fill_user_list2()
+        self.usertableWidget.setHorizontalHeaderLabels(["Name","User_id"])
         self.Back_TF_but.clicked.connect(self.switch_previous_form)
         self.Send_but.clicked.connect(self.send_message)
         self.usertableWidget.itemSelectionChanged.connect(self.selection)
         self.history_LE.setReadOnly(True)
+        # Connect Enter key press event to send_message method
+        self.send_TE.installEventFilter(self)
 
 
     def fill_user_list2(self):
         """
         Fills the user table with user information and unread message counts.
         """
+        global db_url
         try:
-            with open("chats.json", "r") as chatinfo:
-                chat_entries = json.load(chatinfo)
-        except Exception as e:
-            print(f"Error loading data: {e}")
-            return
-        
-        try:
-            with open("accounts.json", "r") as userinfo:
-                user_accounts = json.load(userinfo)
-        except Exception as e:
-            print(f"Error loading data: {e}")
-            return
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
 
-        unread_list=dict()
+             # Fetch the count of pending accounts
+            cur.execute("SELECT count(*) FROM usertable WHERE status IS TRUE;")
+            number_of_accounts = cur.fetchone()[0]
 
-        user_email = login.email_LE.text()
+            unread_query= f"""
+            SELECT sender_id, COUNT(*) AS message_count
+            FROM chat
+            WHERE status = false AND receiver_id = {global_user_id}
+            GROUP BY sender_id, receiver_id;
+            """
+            cur.execute(unread_query)
+            unread_data = cur.fetchall()
+            
+            # Create a dictionary to store sender_id and message_count
+            sender_id_data = dict()
+
+            for i in unread_data:
+                sender_id_data[i[0]] = i[1]
 
 
-        try:
-            for i in user_accounts:
-                unread_count = 0
-                msg_count = 1
-                if i not in chat_entries[user_email]:
-                    unread_list[i] = 0
+            cur.execute("SELECT user_id, first_name, last_name, email FROM usertable WHERE status IS TRUE;")
+            active_user_data = cur.fetchall()
+            row=0
+
+            self.usertableWidget.setRowCount(number_of_accounts)  # Set the row count
+
+            for i in range(number_of_accounts):
+
+                user_id = active_user_data[i][0]
+
+                if user_id not in sender_id_data:
+                    self.usertableWidget.setItem(
+                        row,
+                        0,
+                        QTableWidgetItem(active_user_data[i][2]+ ", " + active_user_data[i][1]),
+                    )
+                    self.usertableWidget.setItem(row, 1, QTableWidgetItem(str(user_id)))
+
                 else:
-                    for j in chat_entries[user_email][i]:
-                        messageid = "message" + str(msg_count)
-                        if (
-                            messageid in chat_entries[user_email][i]
-                            and chat_entries[user_email][i][messageid]["read"] == 0
-                            and chat_entries[user_email][i][messageid]["Status"] == "Received"
-                        ):
-                            unread_count += 1
-                        msg_count += 1
-                    unread_list[i] = unread_count
+                    self.usertableWidget.setItem(row, 1, QTableWidgetItem(str(user_id)))
+                    self.usertableWidget.setItem(
+                        row,
+                        0,
+                        QTableWidgetItem(active_user_data[i][2]+ ", " + active_user_data[i][1]+", " + str(sender_id_data.get(user_id, 0))),
+                    )
+                    self.usertableWidget.item(row, 0).setBackground(QColor(255, 0, 0))
+                    
+
+                self.usertableWidget.setColumnWidth(0, 185)
+                self.usertableWidget.setColumnWidth(1, 0)
+                row += 1
+
         except Exception as e:
-            print(f"Error loading data: {e}")
-        
-        row = 0
-        self.usertableWidget.setRowCount(len(user_accounts))
-        self.usertableWidget.setColumnWidth(0, 185)
-        self.usertableWidget.setColumnWidth(1, 0)
-
-
-#Emailin chats.jsonda yer almaması durumunda hata veriyor. Düzeltilmesi gerekiyor.
-        
-
-        for email, data in user_accounts.items():
-            unread_count = unread_list.get(email, 0)
-            if unread_count > 0:
-                self.usertableWidget.setItem(
-                    row,
-                    0,
-                    QTableWidgetItem(data["surname"] + ", " + data["name"] + " (" + str(unread_list[email]) + ")"),
-                )
-                self.usertableWidget.item(row, 0).setBackground(QColor(255, 0, 0))
-            else:
-                self.usertableWidget.setItem(row, 0, QTableWidgetItem(data["surname"] + ", " + data["name"]))
-            self.usertableWidget.setItem(row, 1, QTableWidgetItem(email))
-            row += 1
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()             
 
     def selection(self):
         """
         Handles user selection from the user table and displays the chat history.
         """
+        global db_url
+        global global_user_id
+
         selected_items = self.usertableWidget.selectedItems()
+
+
+        self.history_LE.setText("")
 
         if not selected_items:
             return
         selected_row=selected_items[0].row()
-        recipient=self.usertableWidget.item(selected_row,1).text()
+        recipient=int(self.usertableWidget.item(selected_row,1).text())
 
-        user_email = login.email_LE.text()
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
 
+             # Fetch name of the user and receiver
+            cur.execute("SELECT first_name FROM usertable WHERE user_id=%s",(global_user_id,))
+            name_of_sender = cur.fetchone()[0]
+            cur.execute("SELECT first_name FROM usertable WHERE user_id=%s",(recipient,))
+            name_of_recepient = cur.fetchone()[0]
+            chat_query = f"""
+            SELECT sender_id, text, date, status
+            FROM chat
+            WHERE (sender_id = {global_user_id} AND receiver_id = {recipient}) OR (sender_id = {recipient} AND receiver_id = {global_user_id})
+            ORDER BY date;
+            """
+            cur.execute(chat_query)
+            chat_data=cur.fetchall()
 
-        with open("accounts.json", "r") as userinfo:
-            accounts=json.load(userinfo)
-            name_of_sender=accounts[user_email]["name"]
-            name_of_recepient=accounts[recipient]["name"]
-
-        with open("chats.json", "r") as chatinfo:
-            chat_entries=json.load(chatinfo)
-
-            # Check if user_email and recipient exist in chat_entries
-        if user_email not in chat_entries or recipient not in chat_entries[user_email]:
-            if hasattr(self, 'history_LE'):
+            if not chat_data:
                 self.history_LE.setText("")
-            return
+                return
+            
+            # Update chat status
+            cur.execute("UPDATE chat SET status = TRUE WHERE receiver_id=%s and sender_id=%s",(global_user_id,recipient))
 
 
-        for key in chat_entries[user_email][recipient]:
-            inner_dict = chat_entries[user_email][recipient][key]
-            inner_dict["read"]=1
+            formatted_date1 = chat_data[0][2].strftime("%A, %B %d")
+            padding = "-" * ((50 - len(formatted_date1)) // 2)
+            self.history_LE.insertPlainText(padding + formatted_date1 + padding+"\n")
 
-        with open("chats.json", "w") as chatinfo:
-            json.dump(chat_entries, chatinfo, indent=2)
-        
-
-        count=0
-
-        chat_recipient = chat_entries[user_email].get(recipient, {})
-
-        if not chat_recipient:
-            if hasattr(self, 'history_LE'):
-                self.history_LE.setText("")
-            return
-
-        for i in chat_entries[user_email][recipient]:
-            if count==0:
-                time1=chat_entries[user_email][recipient][i]["Time"]
-                sender=chat_entries[user_email][recipient][i]["Status"]
-                message=chat_entries[user_email][recipient][i]["Message"]
-                formatted_date1 = datetime.fromtimestamp(time1).strftime("%A, %B %d")
-                formatted_time=datetime.fromtimestamp(time1).strftime("%H:%M")
-                padding = "-" * ((50 - len(formatted_date1)) // 2)
-                if hasattr(self, 'history_LE'):
-                    self.history_LE.setText(padding + formatted_date1 + padding + "\n")
-                    if sender == "Sent":
-                        self.history_LE.append("you : " + formatted_time + "\n" + message + "\n")
-                    else:
-                        self.history_LE.insertPlainText(name_of_recepient+ " : " + formatted_time + "\n" + message + "\n")
-
-                count+=1
-            else:
-                time2=chat_entries[user_email][recipient][i]["Time"]
-                sender=chat_entries[user_email][recipient][i]["Status"]
-                message=chat_entries[user_email][recipient][i]["Message"]
-                formatted_date2 = datetime.fromtimestamp(time2).strftime("%A, %B %d")
-                formatted_time=datetime.fromtimestamp(time2).strftime("%H:%M")
+            for i in chat_data:
+                formatted_time=i[2].strftime("%H:%M")
+                formatted_date2 = i[2].strftime("%A, %B %d")
                 if formatted_date1==formatted_date2:
-                    if sender=="Sent":
-                        self.history_LE.append("you : " + formatted_time + "\n" + message+"\n")
-
+                    message= i[1]
+                    if i[0]==global_user_id:
+                        self.history_LE.append(name_of_sender + " : " + str(formatted_time) + "\n" + message + "\n")
                     else:
-                        self.history_LE.append(name_of_recepient + " : " + formatted_time + "\n" + message+"\n")
-
+                        self.history_LE.append(name_of_recepient+ " : " + str(formatted_time) + "\n" + message + "\n")
+                    formatted_date1=formatted_date2
                 else:
-                    padding = "-" * ((50 - len(formatted_date2)) // 2)
-
+                    message= i[1]
+                    padding = "-" * ((50 - len(formatted_date1)) // 2)
                     self.history_LE.append(padding + formatted_date2 + padding+"\n")
-                    if sender=="Sent":
-                        self.history_LE.append("you : " + formatted_time + "\n" + message+"\n")
-
+                    if i[0]==global_user_id:
+                        self.history_LE.append(name_of_sender + " : " + str(formatted_time) + "\n" + message + "\n")
                     else:
-                        self.history_LE.append(name_of_recepient + " : " + formatted_time + "\n" + message+"\n")
+                        self.history_LE.append(name_of_recepient+ " : " + str(formatted_time) + "\n" + message + "\n")   
+                    formatted_date1=formatted_date2                 
 
-                count+=1
-                formatted_date1=formatted_date2        
+        except Exception as e:
+            print(f"Error: {str(e)}")
+        finally:        
+            cur.close()
+            conn.commit()
+            conn.close() 
+            self.fill_user_list2()
 
-        count=0
-        self.fill_user_list2()
-    
+
     def send_message(self):
         """
         Sends a message to the selected recipient and updates the chat entries.
         """
+        global global_user_id
+        global db_url
+
         message=self.send_TE.toPlainText()
-        # user_email=login.email_LE.text()
         selected_items = self.usertableWidget.selectedItems()
-        user_email = login.email_LE.text()
+        # user_email = login.email_LE.text()
 
         if not selected_items:
             return
         
         selected_row=selected_items[0].row()
-        recipient=self.usertableWidget.item(selected_row,1).text()
-        
-        with open("chats.json", "r") as chat_file:
-            chat_entries = json.load(chat_file)
-        
-        if user_email not in chat_entries:
-            chat_entries[user_email] = {}
-        
-        chat_entries.setdefault(user_email, {})
-        chat_entries.setdefault(recipient, {})
-        
-        time=datetime.now().timestamp()
-        new_message_key_user = f"message{len(chat_entries[user_email].get(recipient, {})) + 1}"
-        new_message_key_recipient = f"message{len(chat_entries[recipient].get(user_email, {})) + 1}"
-        # new_message_key = f"message{len(chat_entries[user_email][recipient]) + 1}"
+        recipient=int(self.usertableWidget.item(selected_row,1).text())
+        current_time = datetime.now()
+        time = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
-        chat_entries[user_email].setdefault(recipient, {})[new_message_key_user] = {
-        "Time": time,
-        "Status": "Sent",
-        "read": 1,
-        "Message": message
-        }
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
 
-        chat_entries[recipient].setdefault(user_email, {})[new_message_key_recipient] = {
-        "Time": time,
-        "Status": "Received",
-        "read": 0,
-        "Message": message
-        }
+            cur.execute("""
+                INSERT INTO chat (
+                    sender_id, receiver_id, text, date, status
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (global_user_id, recipient, message, time, False))
 
-        with open("chats.json", "w") as chat_file:
-            json.dump(chat_entries, chat_file, indent=2) 
-        
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+        finally:        
+            cur.close()
+            conn.commit()
+            conn.close() 
+
         self.send_TE.setText("")
         self.selection()
 
-        
+    def eventFilter(self, obj, event):
+        if obj is self.send_TE and event.type() == event.KeyPress and event.key() == Qt.Key_Return:
+            self.send_message()
+            return True  # Event handled
+        return super().eventFilter(obj, event)
+
     def switch_previous_form(self):
-        with open("accounts.json", "r") as userinfo:
-            accounts = json.load(userinfo)
-        if accounts[login.email_LE.text()]["Account_Type"]=="Student":
-            stackedWidget.setCurrentIndex(3)
-        elif accounts[login.email_LE.text()]["Account_Type"]=="Teacher":
-            stackedWidget.setCurrentIndex(4)
-        elif accounts[login.email_LE.text()]["Account_Type"]=="Admin":
-            stackedWidget.setCurrentIndex(5)
+        global global_user_id
+        try:
+            global db_url
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
+            user_data = cur.fetchone()
+            account_type = user_data[9]
+            # Fetch the existing user data from the database
+            if account_type == "Student":
+                stackedWidget.setCurrentIndex(3)
+            elif account_type == "Teacher":
+                stackedWidget.setCurrentIndex(4)
+            elif account_type == "Admin":
+                stackedWidget.setCurrentIndex(5)
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            self.show_error_message(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()
+
     
     def switch_chatboard(self):
         stackedWidget.setCurrentIndex(6)
@@ -1828,6 +2072,7 @@ if __name__ == '__main__':
 
     # Construct the database URL
     db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
+    create_tables()
 
     login = Login()
     signup = Signup()
