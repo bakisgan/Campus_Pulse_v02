@@ -1074,16 +1074,29 @@ class Chatboard(QMainWindow):
             return True  # Event handled
         return super().eventFilter(obj, event)
 
-        
     def switch_previous_form(self):
-        with open("accounts.json", "r") as userinfo:
-            accounts = json.load(userinfo)
-        if accounts[login.email_LE.text()]["Account_Type"]=="Student":
-            stackedWidget.setCurrentIndex(3)
-        elif accounts[login.email_LE.text()]["Account_Type"]=="Teacher":
-            stackedWidget.setCurrentIndex(4)
-        elif accounts[login.email_LE.text()]["Account_Type"]=="Admin":
-            stackedWidget.setCurrentIndex(5)
+        global global_user_id
+        try:
+            global db_url
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM usertable WHERE user_id = %s", (global_user_id,))
+            user_data = cur.fetchone()
+            account_type = user_data[9]
+            # Fetch the existing user data from the database
+            if account_type == "Student":
+                stackedWidget.setCurrentIndex(3)
+            elif account_type == "Teacher":
+                stackedWidget.setCurrentIndex(4)
+            elif account_type == "Admin":
+                stackedWidget.setCurrentIndex(5)
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            self.show_error_message(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()
+
     
     def switch_chatboard(self):
         stackedWidget.setCurrentIndex(6)
