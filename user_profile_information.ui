@@ -353,7 +353,7 @@ background-color: rgb(255, 255, 255);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLineEdit" name="type_line_2">
+   <widget class="QLineEdit" name="city_line">
     <property name="geometry">
      <rect>
       <x>520</x>
