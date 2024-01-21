@@ -1208,7 +1208,7 @@ class Main_Window(QMainWindow):
         self.comboBox_3.currentIndexChanged.connect(self.populate_table)
         
 
-#load file
+#load file 
 
     def load_attendance(self):
         try:
