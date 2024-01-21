@@ -256,7 +256,10 @@ class Login(QMainWindow):
                         userprofile.mail_line.setText(user_data[1])
                         userprofile.type_line.setText(user_data[9])
                         userprofile.gender_line.setText(user_data[7])
-                        userprofile.birthdate_line.setText(user_data[8].strftime('%Y-%m-%d'))
+                        if user_data[8] == None:
+                            userprofile.birthdate_line.setText("")
+                        else:
+                            userprofile.birthdate_line.setText(user_data[8].strftime('%Y-%m-%d'))
                         userprofile.city_line.setText(user_data[6])
                         student.label_2.setText("Welcome, " + user_data[3])
                         student.label.setText(user_data[3] + " " + user_data[4])
