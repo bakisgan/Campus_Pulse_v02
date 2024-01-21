@@ -1935,6 +1935,27 @@ class MyMainWindow(QMainWindow):
 class TaskManager:
     def __init__(self):
         self.load_data()
+        
+    def load_data(self):
+        # accounts.json, tasks.json ve announcements.json dosyalarını oku
+        
+        with open('accounts.json', 'r') as f:
+            self.accounts_data = json.load(f)
+
+        with open('tasks.json', 'r') as f:
+            self.tasks_data = json.load(f)
+
+        try:    
+            with open('attendance.json', 'r') as f:
+                self.attendance_data = json.load(f)    
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.attendance_data = {}
+
+        try:
+            with open('announcements.json', 'r') as f:
+                self.announcements_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.announcements_data = []        
 
     def populate_students_list(self):
         # accounts.json dosyasındaki 'Student' olan öğrencileri listWidget_StudentList'e ekle
