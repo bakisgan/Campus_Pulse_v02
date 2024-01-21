@@ -43,7 +43,7 @@ def create_tables():
         "city" VARCHAR(30),
         "gender" VARCHAR(10),
         "birthdate" DATE,
-        "status" BOOLEAN
+        "status" BOOLEAN,
         )
         """,
 
@@ -1916,6 +1916,7 @@ if __name__ == '__main__':
 
     # Construct the database URL
     db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
+    create_tables()
 
     login = Login()
     signup = Signup()
