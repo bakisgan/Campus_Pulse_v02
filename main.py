@@ -1943,7 +1943,7 @@ class TaskManager:
             self.accounts_data = json.load(f)
 
         with open('tasks.json', 'r') as f:
-            self.tasks_data = json.load(f)
+            self.tasks_data = json.load(f)  
 
         try:    
             with open('attendance.json', 'r') as f:
