@@ -895,20 +895,48 @@ class Chatboard(QMainWindow):
             cur.execute("SELECT count(*) FROM usertable WHERE status IS TRUE;")
             number_of_accounts = cur.fetchone()[0]
 
+            unread_query= """
+            SELECT sender_id, COUNT(*) AS message_count
+            FROM chat
+            WHERE status = false AND receiver_id = 1
+            GROUP BY sender_id, receiver_id;
+            """
+            cur.execute(unread_query)
+            unread_data = cur.fetchall()
+            
+            # Create a dictionary to store sender_id and message_count
+            sender_id_data = dict()
+
+            for i in unread_data:
+                sender_id_data[i[0]] = i[1]
+
+
             cur.execute("SELECT user_id, first_name, last_name, email FROM usertable WHERE status IS TRUE;")
-            pending_user_data = cur.fetchall()
+            active_user_data = cur.fetchall()
             row=0
 
             self.usertableWidget.setRowCount(number_of_accounts)  # Set the row count
 
             for i in range(number_of_accounts):
-                self.usertableWidget.setItem(
-                    row,
-                    0,
-                    QTableWidgetItem(pending_user_data[i][2]+ ", " + pending_user_data[i][1]),
-                )
-                # self.usertableWidget.item(row, 0).setBackground(QColor(255, 0, 0))
-                self.usertableWidget.setItem(row, 1, QTableWidgetItem(pending_user_data[i][0]))
+
+                user_id = active_user_data[i][0]
+
+                if user_id not in sender_id_data:
+                    self.usertableWidget.setItem(
+                        row,
+                        0,
+                        QTableWidgetItem(active_user_data[i][2]+ ", " + active_user_data[i][1]),
+                    )
+                    self.usertableWidget.setItem(row, 1, QTableWidgetItem(user_id))
+                else:
+                    self.usertableWidget.setItem(
+                        row,
+                        0,
+                        QTableWidgetItem(active_user_data[i][2]+ ", " + active_user_data[i][1]+", " + str(sender_id_data.get(user_id, 0))),
+                    )
+                    self.usertableWidget.item(row, 0).setBackground(QColor(255, 0, 0))
+                    self.usertableWidget.setItem(row, 1, QTableWidgetItem(user_id))
+
                 self.usertableWidget.setColumnWidth(0, 185)
                 self.usertableWidget.setColumnWidth(1, 0)
                 row += 1
