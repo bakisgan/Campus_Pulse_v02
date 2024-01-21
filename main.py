@@ -670,16 +670,6 @@ class ContactAdmin(QMainWindow):
 
 
 
-
-
-
-
-
-
-
-
-
-
     def clear_line_edits_contactadmin(self):
         """
         Clears line edits in the contact admin form.
@@ -872,6 +862,17 @@ class Admin(QMainWindow):
                         email, password, first_name, last_name, phone, city, gender, birthdate, user_type, status, application_id
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (selected_user_data[1], selected_user_data[2], selected_user_data[3], selected_user_data[4], selected_user_data[5], selected_user_data[6], selected_user_data[7], selected_user_data[8], "Teacher", True, selected_user_data[0]))
+                    
+                    cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Usertable', CURRENT_TIMESTAMP, 'Teacher Account is created', 'Creation')
+                """, (global_user_id,))
+                    
+                    cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Application', CURRENT_TIMESTAMP, 'Teacher Account is approved', 'Update')
+                """, (global_user_id,))                   
+                    
             conn.commit()
         except Exception as e:
             # Rollback the transaction in case of an error
@@ -884,8 +885,6 @@ class Admin(QMainWindow):
             conn.close()             
             self.tableWidget.clearContents()
             self.fill_table()
-           
-
 
     def discard_account(self):
         """
@@ -905,6 +904,10 @@ class Admin(QMainWindow):
                     email_key = email_item.text()
                 if checkbox.isChecked():
                     cur.execute("UPDATE application SET status = FALSE WHERE email = %s",(email_key,))
+                    cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Application', CURRENT_TIMESTAMP, 'Teacher Account is not approved', 'Update')
+                """, (global_user_id,))
             conn.commit()
         except Exception as e:
             # Rollback the transaction in case of an error
