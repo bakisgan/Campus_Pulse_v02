@@ -1445,6 +1445,9 @@ class MyMainWindow(QMainWindow):
         self.announcements = []
         self.announcement_index = 0
         self.db_connection = MyMainWindow.connect_to_database()
+        self.label_lastdateofannouncement_5 = QLabel("Last Date of Announcement:")
+        self.label_announcementtext_5 = QLabel("Announcement Text:")
+        self.populate_announcements()
 
         self.populate_students_list()
         self.populate_todo_list()
@@ -1455,8 +1458,10 @@ class MyMainWindow(QMainWindow):
         self.populate_coursemeet_list()
         self.fetch_announcements_from_database() 
         self.update_announcements()
-        print(self.announcements)
-    
+        self.comboBox_announcement.currentIndexChanged.connect(self.display_selected_announcement)
+        self.pushButton_DeleteAnnouncement_6.clicked.connect(self.delete_announcement)
+
+        self.pushButton_edit_announcement.clicked.connect(self.edit_announcement)
         self.pushButton_chatbox.clicked.connect(student.switch_chatboard)
         self.pushButton_profile.clicked.connect(student.switch_userprofile)
         self.pushButton_backtologin.clicked.connect(student.switch_login)
@@ -1548,6 +1553,72 @@ class MyMainWindow(QMainWindow):
             self.announcement_index += 1
         else:
             self.announcement_index = 0    
+
+    def populate_announcements(self):
+        try:
+            # Bugünün tarihini al
+            current_date = QDate.currentDate()
+
+            # announcement_id'leri ve announcement_text'leri çek (deadline bugünden büyük olanlar)
+            with self.db_connection.cursor() as cursor:
+                cursor.execute("SELECT announcement_id, text FROM announcement WHERE deadline >= %s", (current_date.toString("yyyy-MM-dd"),))
+                announcements = cursor.fetchall()
+
+            # comboBox_announcement'ı doldur
+            self.comboBox_announcement.clear()  # Combobox'ı temizle
+            for announcement_id, text in announcements:
+                self.comboBox_announcement.addItem(f"{announcement_id}: {text}")
+
+        except Exception as e:
+            print(f"Hata: announcement_id'leri ve announcement_text'leri çekerken bir sorun oluştu. Hata: {e}")
+        # Seçilen announcement'ın text'ini göstermek için
+        
+        
+    def display_selected_announcement(self):
+        selected_text = self.comboBox_announcement.currentText()
+        announcement_text = selected_text.split(": ")[1]
+        self.textEdit_announcementtext_5.setPlainText(announcement_text)
+
+    # Announcement'ı düzenlemek için
+    def edit_announcement(self):
+        new_date = self.dateEdit_lastdateofannouncement_5.date().toString("yyyy-MM-dd")
+        new_text = self.textEdit_announcementtext_5.toPlainText()
+        selected_id = int(self.comboBox_announcement.currentText().split(": ")[0])
+        teacher_id = global_user_id
+        current_date = QDate.currentDate().toString("yyyy-MM-dd")
+
+        try:
+            # announcement'ı güncelle
+            with self.db_connection.cursor() as cursor:
+                cursor.execute("UPDATE announcement SET deadline = %s, text = %s, teacher_id = %s, date = CURRENT_TIMESTAMP WHERE announcement_id = %s",
+                            (new_date, new_text, teacher_id, selected_id))
+                
+                
+                self.db_connection.commit()
+
+        except Exception as e:
+            print(f"Hata: announcement güncellenirken bir sorun oluştu. Hata: {e}")               
+        
+    # Announcement'ı silmek için
+    def delete_announcement(self):
+        selected_id = int(self.comboBox_announcement.currentText().split(": ")[0])
+
+        try:
+            # announcement'ı sil
+            with self.db_connection.cursor() as cursor:
+                cursor.execute("DELETE FROM announcement WHERE announcement_id = %s", (selected_id,))
+                self.db_connection.commit()
+
+                # comboBox_announcement'ı güncelle (silinen kaydı kaldır)
+                self.comboBox_announcement.removeItem(self.comboBox_announcement.currentIndex())
+
+                # Silme işlemi tamamlandıktan sonra text alanlarını temizle
+                self.textEdit_announcementtext_5.clear()
+                self.dateEdit_lastdateofannouncement_5.clear()
+
+        except Exception as e:
+            print(f"Hata: announcement silinirken bir sorun oluştu. Hata: {e}")
+
 
     @classmethod
     def connect_to_database(cls):
@@ -2005,12 +2076,10 @@ class TaskManager:
             with self.db_connection.cursor() as cursor:
                 cursor.execute("SELECT lesson_name FROM lesson")
                 result = cursor.fetchall()
-                print(result)
 
             for row in result:
                 lesson_name = row[0]
                 lessons.append(lesson_name)
-                print(lesson_name)
 
         except Exception as e:
             print(f"Hata: Ders adları çekilirken bir sorun oluştu. Hata: {e}")

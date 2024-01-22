@@ -156,7 +156,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="MainPage">
      <attribute name="title">
@@ -1870,9 +1870,9 @@ SAVE</string>
          <property name="geometry">
           <rect>
            <x>650</x>
-           <y>280</y>
+           <y>260</y>
            <width>201</width>
-           <height>241</height>
+           <height>261</height>
           </rect>
          </property>
          <property name="font">
@@ -1936,12 +1936,12 @@ border-radius:10px;</string>
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Deadline of the announcement&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
-         <widget class="QPushButton" name="pushButton_SendAnnouncement_5">
+         <widget class="QPushButton" name="pushButton_edit_announcement">
           <property name="geometry">
            <rect>
-            <x>30</x>
+            <x>20</x>
             <y>190</y>
-            <width>71</width>
+            <width>81</width>
             <height>41</height>
            </rect>
           </property>
@@ -2043,14 +2043,14 @@ background-color: rgb(228, 192, 180);</string>
             <x>30</x>
             <y>30</y>
             <width>151</width>
-            <height>22</height>
+            <height>21</height>
            </rect>
           </property>
           <property name="styleSheet">
            <string notr="true">background-color: rgb(228, 192, 180);</string>
           </property>
          </widget>
-         <widget class="QPushButton" name="pushButton_SendAnnouncement_6">
+         <widget class="QPushButton" name="pushButton_DeleteAnnouncement_6">
           <property name="geometry">
            <rect>
             <x>120</x>
