@@ -285,7 +285,7 @@ class Login(QMainWindow):
                             # teacher.connect_table_signals() 
                             stackedWidget.setCurrentIndex(4)
                             # teacher.pushButton_switchadmin.hide()
-                            teacher.label_Name.setText(f"Welcome {user_data[2]} {user_data[3]}")
+                            teacher.label_Name.setText(f"Welcome {user_data[3]} {user_data[4]}")
 
                         elif account_type == "Admin":
                             # teacher.task_manager.load_data()
