@@ -1824,30 +1824,45 @@ class MyMainWindow(QMainWindow):
         students = self.task_manager.get_students()
         for student in students:
             email = student.get("Email", "")
+            id=student.get("UserId", "")
             name = student.get("name", "")
             surname = student.get("surname", "")
-            self.listWidget_AssignList.addItem(f"{name} {surname} ({email})")
-            self.listWidget_studentlist.addItem(f"{name} {surname} ({email})")
+            self.listWidget_AssignList.addItem(f"{id}: {name} {surname}")
+            self.listWidget_studentlist.addItem(f"{id}: {name} {surname}")   
+            self.listWidget_AssignList_2.addItem(f"{id}: {name} {surname}")
             
     def create_task(self):
         # Yeni görev oluştur
         task_text = self.plainTextEdit_NewTask.toPlainText()
 
         deadlinecontrol = self.dateTimeEdit_Deadline.date()
-        if  deadlinecontrol < QDate.currentDate():
-            QMessageBox.warning(self, "Warning", "Selected date can not be before the current date.")
-            return  
+        if deadlinecontrol < QDate.currentDate():
+            QMessageBox.warning(self, "Warning", "Selected date cannot be before the current date.")
+            return
         deadline = deadlinecontrol.toString("yyyy-MM-dd")
+
         # Seçilen öğrenci e-postalarını al
         selected_items = self.listWidget_AssignList.selectedItems()
         if not selected_items:
             QMessageBox.warning(self, "Warning", "Please select at least one student.")
-            return        
-        
-        assigned_emails = [item.text().split("(")[-1].split(")")[0] for item in selected_items]
+            return
 
-        # Görev yöneticisine görev oluşturma işlemini yapması için bildir
-        self.task_manager.create_task(assigned_emails, task_text, deadline)
+        assigned_students = [item.text().split(":")[0] for item in selected_items]
+
+        # Görevi belirtilen öğrencilere ata ve veritabanına ekle
+        for student_id in assigned_students:
+            try:
+                # Veritabanına yeni görev ekle
+                with self.db_connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO task (teacher_id, text, date, deadline, status, student_id)
+                        VALUES (%s, %s, CURRENT_TIMESTAMP, %s, FALSE, %s)
+                    """, (global_user_id, task_text, deadline, int(student_id)))
+                self.db_connection.commit()
+
+            except Exception as e:
+                print(f"Hata: Görev eklenirken bir sorun oluştu. Hata: {e}")
+
         QMessageBox.information(self, "Success", "Task created successfully!")
 
         # Görev oluşturulduktan sonra formu temizle

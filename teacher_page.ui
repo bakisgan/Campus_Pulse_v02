@@ -156,7 +156,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="MainPage">
      <attribute name="title">
@@ -595,7 +595,7 @@ Login</string>
        <string notr="true">background-color: rgb(228, 192, 180);</string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="Tasks">
        <attribute name="title">
@@ -1186,9 +1186,10 @@ border-radius:10px;</string>
           </property>
           <property name="styleSheet">
            <string notr="true">border-radius:10px;
+background-color: rgb(85, 255, 0);
 border-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, stop:0 rgba(0, 0, 0, 255), stop:0.19397 rgba(0, 0, 0, 255), stop:0.202312 rgba(122, 97, 0, 255), stop:0.495514 rgba(76, 58, 0, 255), stop:0.504819 rgba(255, 255, 255, 255), stop:0.79 rgba(255, 255, 255, 255), stop:1 rgba(255, 158, 158, 255));
 color: rgb(0, 0, 0);
-background-color: rgb(228, 192, 180);</string>
+</string>
           </property>
           <property name="text">
            <string>📢
@@ -1412,6 +1413,7 @@ background-color: rgb(170, 85, 127);
           </property>
           <property name="styleSheet">
            <string notr="true">background-color: rgb(228, 192, 180);
+background-color: rgb(85, 255, 0);
 border-radius:10px;
 </string>
           </property>
@@ -1671,7 +1673,7 @@ border-radius:10px;</string>
            <string notr="true">border-radius:10px;
 border-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, stop:0 rgba(0, 0, 0, 255), stop:0.19397 rgba(0, 0, 0, 255), stop:0.202312 rgba(122, 97, 0, 255), stop:0.495514 rgba(76, 58, 0, 255), stop:0.504819 rgba(255, 255, 255, 255), stop:0.79 rgba(255, 255, 255, 255), stop:1 rgba(255, 158, 158, 255));
 color: rgb(0, 0, 0);
-background-color: rgb(228, 192, 180);</string>
+background-color: rgb(85, 255, 0);</string>
           </property>
           <property name="text">
            <string>📢
@@ -1785,10 +1787,10 @@ background-color: rgb(228, 192, 180);</string>
            <string notr="true">border-radius:10px;
 border-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, stop:0 rgba(0, 0, 0, 255), stop:0.19397 rgba(0, 0, 0, 255), stop:0.202312 rgba(122, 97, 0, 255), stop:0.495514 rgba(76, 58, 0, 255), stop:0.504819 rgba(255, 255, 255, 255), stop:0.79 rgba(255, 255, 255, 255), stop:1 rgba(255, 158, 158, 255));
 color: rgb(0, 0, 0);
-background-color: rgb(228, 192, 180);</string>
+background-color: rgb(255, 0, 0);</string>
           </property>
           <property name="text">
-           <string>📢
+           <string>✖️
 DELETE</string>
           </property>
          </widget>
@@ -1871,7 +1873,7 @@ background-color: rgb(170, 85, 127);
            <enum>QAbstractItemView::MultiSelection</enum>
           </property>
          </widget>
-         <widget class="QPushButton" name="pushButton_CreateTask_2">
+         <widget class="QPushButton" name="pushButton_Delete_Task">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -2071,7 +2073,7 @@ selection-background-color: rgb(255, 0, 0);</string>
            <bool>true</bool>
           </property>
          </widget>
-         <widget class="QComboBox" name="comboBox">
+         <widget class="QComboBox" name="comboBox_tasks">
           <property name="geometry">
            <rect>
             <x>20</x>
@@ -2146,6 +2148,7 @@ selection-background-color: rgb(255, 0, 0);</string>
           </property>
           <property name="styleSheet">
            <string notr="true">background-color: rgb(228, 192, 180);
+background-color: rgb(85, 255, 0);
 border-radius:10px;
 </string>
           </property>
@@ -2212,7 +2215,7 @@ border-radius:10px;</string>
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Student List&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
-      <widget class="QListWidget" name="listWidget_studentlist_2">
+      <widget class="QListWidget" name="listWidget_studentlist">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -2254,6 +2257,7 @@ border-radius:10px;</string>
        </property>
        <property name="styleSheet">
         <string notr="true">background-color: rgb(228, 192, 180);
+background-color: rgb(85, 255, 0);
 border-radius: 10px ;</string>
        </property>
        <property name="text">
@@ -2280,7 +2284,7 @@ SAVE</string>
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Lesson&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
-      <widget class="QListWidget" name="listWidget_coursemeet_2">
+      <widget class="QListWidget" name="listWidget_coursemeet">
        <property name="geometry">
         <rect>
          <x>210</x>
@@ -2325,7 +2329,7 @@ SAVE</string>
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Date and Time&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
-      <widget class="QDateTimeEdit" name="dateTimeEdit_sch_2">
+      <widget class="QDateTimeEdit" name="dateTimeEdit_sch">
        <property name="geometry">
         <rect>
          <x>210</x>
@@ -2383,7 +2387,7 @@ border-radius:10px;</string>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
-      <widget class="QPushButton" name="pushButton_LessonSave_2">
+      <widget class="QPushButton" name="pushButton_LessonSave">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -2405,7 +2409,7 @@ border-radius:10px;</string>
         <number>0</number>
        </property>
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(228, 192, 180);
+        <string notr="true">background-color: rgb(85, 255, 0);
 border-radius: 10px ;</string>
        </property>
        <property name="text">
