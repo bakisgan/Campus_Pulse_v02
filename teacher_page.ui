@@ -1270,8 +1270,8 @@ background-color: rgb(228, 192, 180);</string>
         <widget class="Line" name="line">
          <property name="geometry">
           <rect>
-           <x>0</x>
-           <y>230</y>
+           <x>-10</x>
+           <y>250</y>
            <width>631</width>
            <height>16</height>
           </rect>
@@ -1305,10 +1305,10 @@ background-color: rgb(228, 192, 180);</string>
          </property>
          <property name="geometry">
           <rect>
-           <x>32</x>
-           <y>260</y>
+           <x>30</x>
+           <y>10</y>
            <width>551</width>
-           <height>261</height>
+           <height>241</height>
           </rect>
          </property>
          <property name="sizePolicy">
@@ -1349,10 +1349,10 @@ background-color: rgb(170, 85, 127);
          <widget class="QListWidget" name="listWidget_AssignList">
           <property name="geometry">
            <rect>
-            <x>205</x>
+            <x>210</x>
             <y>50</y>
             <width>193</width>
-            <height>192</height>
+            <height>141</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -1384,7 +1384,7 @@ background-color: rgb(170, 85, 127);
           <property name="geometry">
            <rect>
             <x>410</x>
-            <y>174</y>
+            <y>130</y>
             <width>121</width>
             <height>51</height>
            </rect>
@@ -1478,7 +1478,7 @@ SAVE</string>
           <property name="geometry">
            <rect>
             <x>450</x>
-            <y>60</y>
+            <y>29</y>
             <width>51</width>
             <height>16</height>
            </rect>
@@ -1507,7 +1507,7 @@ SAVE</string>
             <x>7</x>
             <y>50</y>
             <width>193</width>
-            <height>191</height>
+            <height>141</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -1539,7 +1539,7 @@ SAVE</string>
           <property name="geometry">
            <rect>
             <x>410</x>
-            <y>80</y>
+            <y>49</y>
             <width>121</width>
             <height>41</height>
            </rect>
@@ -1574,295 +1574,6 @@ selection-background-color: rgb(255, 0, 0);</string>
           </property>
           <property name="calendarPopup">
            <bool>true</bool>
-          </property>
-         </widget>
-        </widget>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="geometry">
-          <rect>
-           <x>32</x>
-           <y>20</y>
-           <width>361</width>
-           <height>201</height>
-          </rect>
-         </property>
-         <property name="font">
-          <font>
-           <family>Calibri</family>
-           <pointsize>12</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="toolTipDuration">
-          <number>0</number>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(170, 85, 127);
-border-radius:10px;</string>
-         </property>
-         <property name="title">
-          <string>Create New Meeting or Course</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <widget class="QLabel" name="label">
-          <property name="geometry">
-           <rect>
-            <x>60</x>
-            <y>20</y>
-            <width>91</width>
-            <height>16</height>
-           </rect>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgb(0, 0, 0);</string>
-          </property>
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Student List&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-         <widget class="QListWidget" name="listWidget_studentlist">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>40</y>
-            <width>161</width>
-            <height>151</height>
-           </rect>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(228, 192, 180);</string>
-          </property>
-          <property name="selectionMode">
-           <enum>QAbstractItemView::MultiSelection</enum>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="pushButton_SchSave">
-          <property name="geometry">
-           <rect>
-            <x>210</x>
-            <y>160</y>
-            <width>131</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="font">
-           <font>
-            <family>Calibri</family>
-            <pointsize>10</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-            <underline>false</underline>
-           </font>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(228, 192, 180);
-border-radius: 10px ;</string>
-          </property>
-          <property name="text">
-           <string>💾
-SAVE</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_5">
-          <property name="geometry">
-           <rect>
-            <x>260</x>
-            <y>20</y>
-            <width>51</width>
-            <height>16</height>
-           </rect>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgb(0, 0, 0);</string>
-          </property>
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Lesson&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-         <widget class="QListWidget" name="listWidget_coursemeet">
-          <property name="geometry">
-           <rect>
-            <x>210</x>
-            <y>40</y>
-            <width>131</width>
-            <height>61</height>
-           </rect>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(228, 192, 180);</string>
-          </property>
-          <item>
-           <property name="text">
-            <string>Data Science</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Mentor Meeting</string>
-           </property>
-          </item>
-         </widget>
-         <widget class="QLabel" name="label_10">
-          <property name="geometry">
-           <rect>
-            <x>240</x>
-            <y>103</y>
-            <width>111</width>
-            <height>16</height>
-           </rect>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgb(0, 0, 0);</string>
-          </property>
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Date and Time&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-         <widget class="QDateTimeEdit" name="dateTimeEdit_sch">
-          <property name="geometry">
-           <rect>
-            <x>210</x>
-            <y>121</y>
-            <width>131</width>
-            <height>21</height>
-           </rect>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(228, 192, 180);
-color: rgb(0, 0, 0);</string>
-          </property>
-          <property name="date">
-           <date>
-            <year>2024</year>
-            <month>1</month>
-            <day>1</day>
-           </date>
-          </property>
-          <property name="calendarPopup">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </widget>
-        <widget class="QGroupBox" name="groupBox_ne_lesson">
-         <property name="geometry">
-          <rect>
-           <x>410</x>
-           <y>20</y>
-           <width>171</width>
-           <height>201</height>
-          </rect>
-         </property>
-         <property name="font">
-          <font>
-           <family>Calibri</family>
-           <pointsize>12</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="toolTipDuration">
-          <number>0</number>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(170, 85, 127);
-border-radius:10px;</string>
-         </property>
-         <property name="title">
-          <string>Create New Lesson</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <widget class="QPushButton" name="pushButton_LessonSave">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>150</y>
-            <width>131</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="font">
-           <font>
-            <family>Calibri</family>
-            <pointsize>10</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-            <underline>false</underline>
-           </font>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(228, 192, 180);
-border-radius: 10px ;</string>
-          </property>
-          <property name="text">
-           <string>💾
-SAVE</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_new_lesson">
-          <property name="geometry">
-           <rect>
-            <x>50</x>
-            <y>30</y>
-            <width>91</width>
-            <height>16</height>
-           </rect>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgb(0, 0, 0);</string>
-          </property>
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;New Lesson&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-         <widget class="QTextEdit" name="textEdit_lesson">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>50</y>
-            <width>131</width>
-            <height>41</height>
-           </rect>
-          </property>
-          <property name="toolTipDuration">
-           <number>0</number>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(228, 192, 180);</string>
-          </property>
-          <property name="placeholderText">
-           <string>Please write the new lesson name here...</string>
           </property>
          </widget>
         </widget>
@@ -2082,13 +1793,368 @@ DELETE</string>
           </property>
          </widget>
         </widget>
-        <zorder>groupBox</zorder>
-        <zorder>groupBox_2</zorder>
-        <zorder>line</zorder>
-        <zorder>line_2</zorder>
-        <zorder>groupBox_NewTask</zorder>
-        <zorder>groupBox_ne_lesson</zorder>
-        <zorder>groupBox_3</zorder>
+        <widget class="QGroupBox" name="groupBox_NewTask_2">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>270</y>
+           <width>551</width>
+           <height>241</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <family>Calibri</family>
+           <pointsize>12</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="toolTipDuration">
+          <number>0</number>
+         </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">
+border-radius:10px;
+background-color: rgb(170, 85, 127);
+</string>
+         </property>
+         <property name="title">
+          <string>Edit Delete Task</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
+         </property>
+         <widget class="QListWidget" name="listWidget_AssignList_2">
+          <property name="geometry">
+           <rect>
+            <x>17</x>
+            <y>90</y>
+            <width>193</width>
+            <height>141</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(228, 192, 180);</string>
+          </property>
+          <property name="inputMethodHints">
+           <set>Qt::ImhMultiLine</set>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::MultiSelection</enum>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_CreateTask_2">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>420</x>
+            <y>200</y>
+            <width>121</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <family>Calibri</family>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <italic>false</italic>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create Task&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(228, 192, 180);
+background-color: rgb(255, 0, 0);
+border-radius:10px;
+</string>
+          </property>
+          <property name="text">
+           <string>✖️
+DELETE</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_Assignees_2">
+          <property name="geometry">
+           <rect>
+            <x>77</x>
+            <y>70</y>
+            <width>71</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="text">
+           <string>Assignees</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_Task_2">
+          <property name="geometry">
+           <rect>
+            <x>290</x>
+            <y>70</y>
+            <width>41</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="text">
+           <string>Task </string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_Deadline_2">
+          <property name="geometry">
+           <rect>
+            <x>460</x>
+            <y>70</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="text">
+           <string>Deadline</string>
+          </property>
+         </widget>
+         <widget class="QPlainTextEdit" name="plainTextEdit_NewTask_2">
+          <property name="geometry">
+           <rect>
+            <x>217</x>
+            <y>90</y>
+            <width>193</width>
+            <height>141</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>10</pointsize>
+            <italic>false</italic>
+           </font>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(228, 192, 180);
+
+</string>
+          </property>
+          <property name="placeholderText">
+           <string>Please write your task description here...</string>
+          </property>
+         </widget>
+         <widget class="QDateTimeEdit" name="dateTimeEdit_Deadline_2">
+          <property name="geometry">
+           <rect>
+            <x>420</x>
+            <y>90</y>
+            <width>121</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <family>Calibri</family>
+            <pointsize>10</pointsize>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(228, 192, 180);
+selection-background-color: rgb(255, 0, 0);</string>
+          </property>
+          <property name="date">
+           <date>
+            <year>2024</year>
+            <month>1</month>
+            <day>1</day>
+           </date>
+          </property>
+          <property name="calendarPopup">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBox">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>521</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(228, 192, 180);</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_Assignees_3">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>10</y>
+            <width>71</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="text">
+           <string>Task Id-Task </string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_Edit_Task">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>420</x>
+            <y>150</y>
+            <width>121</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <family>Calibri</family>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <italic>false</italic>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create Task&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="toolTipDuration">
+           <number>0</number>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(228, 192, 180);
+border-radius:10px;
+</string>
+          </property>
+          <property name="text">
+           <string>💾
+EDIT</string>
+          </property>
+         </widget>
+        </widget>
        </widget>
       </item>
      </layout>
@@ -2097,6 +2163,295 @@ DELETE</string>
      <attribute name="title">
       <string>Page</string>
      </attribute>
+     <widget class="QGroupBox" name="groupBox_4">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>20</y>
+        <width>361</width>
+        <height>201</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>12</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>0</number>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(170, 85, 127);
+border-radius:10px;</string>
+      </property>
+      <property name="title">
+       <string>Create New Meeting or Course</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <widget class="QLabel" name="label_2">
+       <property name="geometry">
+        <rect>
+         <x>60</x>
+         <y>20</y>
+         <width>91</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: rgb(0, 0, 0);</string>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Student List&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QListWidget" name="listWidget_studentlist_2">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>40</y>
+         <width>161</width>
+         <height>151</height>
+        </rect>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(228, 192, 180);</string>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::MultiSelection</enum>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_SchSave_2">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>160</y>
+         <width>131</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Calibri</family>
+         <pointsize>10</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>false</underline>
+        </font>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(228, 192, 180);
+border-radius: 10px ;</string>
+       </property>
+       <property name="text">
+        <string>💾
+SAVE</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_7">
+       <property name="geometry">
+        <rect>
+         <x>260</x>
+         <y>20</y>
+         <width>51</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: rgb(0, 0, 0);</string>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Lesson&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QListWidget" name="listWidget_coursemeet_2">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>40</y>
+         <width>131</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(228, 192, 180);</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Data Science</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Mentor Meeting</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QLabel" name="label_11">
+       <property name="geometry">
+        <rect>
+         <x>240</x>
+         <y>103</y>
+         <width>111</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: rgb(0, 0, 0);</string>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Date and Time&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QDateTimeEdit" name="dateTimeEdit_sch_2">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>121</y>
+         <width>131</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(228, 192, 180);
+color: rgb(0, 0, 0);</string>
+       </property>
+       <property name="date">
+        <date>
+         <year>2024</year>
+         <month>1</month>
+         <day>1</day>
+        </date>
+       </property>
+       <property name="calendarPopup">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_ne_lesson_2">
+      <property name="geometry">
+       <rect>
+        <x>700</x>
+        <y>20</y>
+        <width>171</width>
+        <height>201</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>12</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>0</number>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(170, 85, 127);
+border-radius:10px;</string>
+      </property>
+      <property name="title">
+       <string>Create New Lesson</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <widget class="QPushButton" name="pushButton_LessonSave_2">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>150</y>
+         <width>131</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Calibri</family>
+         <pointsize>10</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+         <underline>false</underline>
+        </font>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(228, 192, 180);
+border-radius: 10px ;</string>
+       </property>
+       <property name="text">
+        <string>💾
+SAVE</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_new_lesson_2">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>30</y>
+         <width>91</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: rgb(0, 0, 0);</string>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;New Lesson&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QTextEdit" name="textEdit_lesson_2">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>50</y>
+         <width>131</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="toolTipDuration">
+        <number>0</number>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(228, 192, 180);</string>
+       </property>
+       <property name="placeholderText">
+        <string>Please write the new lesson name here...</string>
+       </property>
+      </widget>
+     </widget>
     </widget>
    </widget>
   </widget>
