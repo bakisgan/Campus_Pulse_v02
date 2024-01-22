@@ -1975,7 +1975,7 @@ class MyMainWindow(QMainWindow):
 
 
                 self.course_tableWidget.setItem(row,0,QTableWidgetItem(i[0]))
-                self.course_tableWidget.setItem(row, 1, QTableWidgetItem(i[1]))
+                self.course_tableWidget.setItem(row,1, QTableWidgetItem(i[1]))
 
                 self.course_tableWidget.setColumnWidth(0, 150)
                 self.course_tableWidget.setColumnWidth(1, 150)
