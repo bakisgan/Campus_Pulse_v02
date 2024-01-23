@@ -125,7 +125,7 @@ background-color: rgb(170, 0, 0);</string>
      <rect>
       <x>40</x>
       <y>320</y>
-      <width>231</width>
+      <width>261</width>
       <height>191</height>
      </rect>
     </property>
@@ -133,13 +133,13 @@ background-color: rgb(170, 0, 0);</string>
      <string notr="true">background-color: rgb(209, 209, 209);</string>
     </property>
    </widget>
-   <widget class="QTextEdit" name="history_LE">
+   <widget class="QTableWidget" name="studentWidget">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>320</x>
       <y>320</y>
-      <width>371</width>
-      <height>201</height>
+      <width>401</width>
+      <height>192</height>
      </rect>
     </property>
     <property name="styleSheet">
