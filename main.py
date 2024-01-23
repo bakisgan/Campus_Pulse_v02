@@ -804,6 +804,8 @@ class Admin(QMainWindow):
         self.tableWidget.setColumnWidth(2,150)
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setHorizontalHeaderLabels([ "Select", "Email", "Name", "Surname"])
+        self.courseWidget.itemSelectionChanged.connect(self.fill_students)
+
         self.fill_table()
 
 
@@ -940,7 +942,6 @@ class Admin(QMainWindow):
         Fills the courses with course/mentor name and dates.
         """
         global db_url
-        print("fill courses çalıştırıldı")
 
         try:
             conn = psycopg2.connect(db_url)
@@ -996,8 +997,16 @@ class Admin(QMainWindow):
             cur = conn.cursor()
 
             # Fetch the count of pending accounts
-            lessondate = '2024-01-25 00:00:00'
-            lessonname = 'Mathematics'
+            selected_items = self.courseWidget.selectedItems()
+            if not selected_items:
+                return
+            selected_row=selected_items[0].row()
+            lessondate=self.courseWidget.item(selected_row,0).text()
+            lessonname=self.courseWidget.item(selected_row,1).text()
+            print(lessondate,lessonname)
+
+            # lessondate = '2024-01-25 00:00:00'
+            # lessonname = 'Mathematics'
 
             self.studentWidget.setColumnCount(2)
             self.studentWidget.setHorizontalHeaderLabels(["Attendance", "Name"])
@@ -1016,14 +1025,14 @@ class Admin(QMainWindow):
             self.studentWidget.setRowCount(number_of_students)
 
             # Fetch data of students assigned to the lesson
-            query2 = f'''SELECT calendar.student_id, calendar.status, usertable.first_name, usertable.last_name
+            query2 = f'''SELECT calendar.student_id, calendar.status, usertable.first_name, usertable.last_name, calendar.lesson_id
                         FROM calendar
                         LEFT JOIN lesson ON calendar.lesson_id = lesson.lesson_id
                         LEFT JOIN usertable ON calendar.student_id = usertable.user_id
                         WHERE calendar.planned_date = '{lessondate}' AND lesson.lesson_name = '{lessonname}';
                     '''
 
-            # Fetch the data for pending accounts
+            # Fetch the data for students
             cur.execute(query2)
             student_data = cur.fetchall()
 
@@ -1033,7 +1042,11 @@ class Admin(QMainWindow):
                 attendance_status = student_data[i][1]
                 firstname = student_data[i][2]
                 lastname = student_data[i][3]
+                lessonid=student_data[i][4]
                 checkbox.setChecked(attendance_status)
+                # Connect the stateChanged signal of the checkbox to the update_calendar_status method
+                checkbox.stateChanged.connect(lambda state, sid=studentid: self.update_calendar_status(sid, lessonid, lessondate, state == Qt.Checked))
+
                 self.studentWidget.setCellWidget(row, 0, checkbox)
                 self.studentWidget.setItem(row, 1, QTableWidgetItem(f"{firstname} {lastname}"))
                 row += 1
@@ -1043,6 +1056,34 @@ class Admin(QMainWindow):
         finally:
             cur.close()
             conn.close()
+
+    def update_calendar_status(self, student_id, lessonid, planneddate, new_status):
+        """
+        Update the status in the calendar database.
+        """
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            # Convert planneddate to string and enclose it in single quotes
+            planneddate_str = str(planneddate)
+
+            # Update the status in the calendar table
+            update_query = f'''
+                UPDATE calendar
+                SET status = {new_status}
+                WHERE student_id = {student_id} AND lesson_id = '{lessonid}' AND planned_date = '{planneddate_str}';
+            '''
+            cur.execute(update_query)
+            conn.commit()
+
+        except Exception as e:
+            print(f"Error updating calendar status: {e}")
+        finally:
+            cur.close()
+            conn.close()
+
 
     
 class Chatboard(QMainWindow):
