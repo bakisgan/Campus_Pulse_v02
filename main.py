@@ -285,6 +285,7 @@ class Login(QMainWindow):
                             # teacher.populate_mentor_attendance_table()
                             # teacher.connect_table_signals() 
                             stackedWidget.setCurrentIndex(4)
+                            # teacher.fill_courses()
                             # teacher.pushButton_switchadmin.hide()
                             teacher.label_Name.setText(f"Welcome {user_data[2]} {user_data[3]}")
 
@@ -1527,7 +1528,7 @@ class Main_Window(QMainWindow):
     
     def switch_userprofile(self):
         stackedWidget.setCurrentIndex(7)
-
+########################################################################################################################################    
 class MyMainWindow(QMainWindow):
     def __init__(self):
         super(MyMainWindow, self).__init__()
@@ -1536,40 +1537,41 @@ class MyMainWindow(QMainWindow):
         self.setWindowTitle('Campus Pulse')
         self.task_manager = TaskManager()
         self.pushButton_LessonSave.clicked.connect(self.save_lesson)
-
+        self.announcements = []
         self.populate_students_list()
         self.populate_todo_list()
         self.populate_students_table()
         self.populate_attendance_table()
         self.populate_mentor_attendance_table()
         self.connect_table_signals() 
+        self.populate_task_combobox()
         
     
         self.pushButton_chatbox.clicked.connect(student.switch_chatboard)
         self.pushButton_profile.clicked.connect(student.switch_userprofile)
         self.pushButton_backtologin.clicked.connect(student.switch_login)
         self.pushButton_switchadmin.clicked.connect(self.switch_to_admin)
-
+        self.pushButton_Edit_Task.clicked.connect(self.edit_task)
+        self.pushButton_Delete_Task.clicked.connect(self.delete_task)
         self.pushButton_schedule.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
         self.pushButton_announcement.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
 
         self.pushButton_SchSave.clicked.connect(self.save_attendance)
-        self.tableWidget_Students.setColumnWidth(0,100)
-        self.tableWidget_Students.setColumnWidth(1,150)
-        self.tableWidget_Students.setColumnWidth(2,250)
-        self.tableWidget_Students.setColumnWidth(3,335)
+        
+        self.tableWidget_Students.setColumnWidth(0,150)
+        self.tableWidget_Students.setColumnWidth(1,250)
+        self.tableWidget_Students.setColumnWidth(2,335)
 
         self.tableWidget_ToDoList.setColumnWidth(0, 50)  # 0. sütunun genişliği
         self.tableWidget_ToDoList.setColumnWidth(1, 635)  # 1. sütunun genişliği
         self.tableWidget_ToDoList.setColumnWidth(2, 150)
+        #self.gecici.clicked.connect(self.fill_courses)
         
         # Create Task butonuna tıklandığında
         self.pushButton_CreateTask.clicked.connect(self.create_task)
 
         # Send Announcement butonuna tıklandığında
         self.pushButton_SendAnnouncement.clicked.connect(self.send_announcement)
-
-        self.announcements = self.task_manager.get_all_announcements()
         self.announcement_index = 0  # Sıradaki anonsun indeksi
 
         # QTimer oluştur
@@ -1592,8 +1594,9 @@ class MyMainWindow(QMainWindow):
     def fetch_announcements_from_database(self):
         announcements = []
         try:
+            conn = psycopg2.connect(db_url)
             # Veritabanından anonsları çek
-            with self.db_connection.cursor() as cursor:
+            with conn.cursor() as cursor:
                 cursor.execute("SELECT teacher_id, text, deadline FROM announcement")
                 result = cursor.fetchall()
 
@@ -1628,15 +1631,6 @@ class MyMainWindow(QMainWindow):
             self.announcement_index = 0
 
 
-    def connect_to_database():
-        try:
-            # Veritabanına bağlantı
-            connection = psycopg2.connect(db_url)
-            return connection
-        except Exception as e:
-            print(f"Hata: Veritabanına bağlanırken bir sorun oluştu. Hata: {e}")
-            return None
-
     def save_lesson(self):
         # Kullanıcı tarafından girilen ders adını al
         lesson_name = self.textEdit_lesson.toPlainText()
@@ -1658,7 +1652,7 @@ class MyMainWindow(QMainWindow):
     def is_lesson_exists(self, lesson_name):
         try:
             # Veritabanına bağlantı
-            connection = self.connect_to_database()
+            connection = psycopg2.connect(db_url)
 
             # Ders adını kontrol et
             with connection.cursor() as cursor:
@@ -1678,7 +1672,7 @@ class MyMainWindow(QMainWindow):
     def insert_lesson_to_database(self, lesson_name):
         try:
             # Veritabanına bağlantı
-            connection = self.connect_to_database()
+            connection = psycopg2.connect(db_url)
 
             # Ders adını eklemek için sorgu
             with connection.cursor() as cursor:
@@ -1827,30 +1821,69 @@ class MyMainWindow(QMainWindow):
         students = self.task_manager.get_students()
         for student in students:
             email = student.get("Email", "")
+            id=student.get("user_id", "")
             name = student.get("name", "")
             surname = student.get("surname", "")
-            self.listWidget_AssignList.addItem(f"{name} {surname} ({email})")
-            self.listWidget_studentlist.addItem(f"{name} {surname} ({email})")
+            self.listWidget_AssignList.addItem(f"{id}: {name} {surname}")
+            self.listWidget_studentlist.addItem(f"{id}: {name} {surname}")   
+            self.listWidget_AssignList_2.addItem(f"{id}: {name} {surname}")
+
+
+    def populate_task_combobox(self):
+        try:
+            conn = psycopg2.connect(db_url)
+            with conn.cursor() as cursor:
+                current_date = datetime.now().strftime("%Y-%m-%d")
+                cursor.execute("SELECT DISTINCT text FROM task WHERE deadline > %s", (current_date,))
+                task_names = cursor.fetchall()
+
+            # Extract unique task names from the result
+            unique_task_names = set(task_name for (task_name,) in task_names)
+
+            # Clear and populate the combobox
+            self.comboBox_tasks.clear()
+            for task_name in unique_task_names:
+                self.comboBox_tasks.addItem(task_name)
+
+        except Exception as e:
+            print(f"Hata: Görevler çekilirken bir sorun oluştu. Hata: {e}")
+
+
+
             
     def create_task(self):
         # Yeni görev oluştur
         task_text = self.plainTextEdit_NewTask.toPlainText()
 
         deadlinecontrol = self.dateTimeEdit_Deadline.date()
-        if  deadlinecontrol < QDate.currentDate():
-            QMessageBox.warning(self, "Warning", "Selected date can not be before the current date.")
-            return  
+        if deadlinecontrol < QDate.currentDate():
+            QMessageBox.warning(self, "Warning", "Selected date cannot be before the current date.")
+            return
         deadline = deadlinecontrol.toString("yyyy-MM-dd")
+
         # Seçilen öğrenci e-postalarını al
         selected_items = self.listWidget_AssignList.selectedItems()
         if not selected_items:
             QMessageBox.warning(self, "Warning", "Please select at least one student.")
-            return        
-        
-        assigned_emails = [item.text().split("(")[-1].split(")")[0] for item in selected_items]
+            return
 
-        # Görev yöneticisine görev oluşturma işlemini yapması için bildir
-        self.task_manager.create_task(assigned_emails, task_text, deadline)
+        assigned_students = [item.text().split(":")[0] for item in selected_items]
+
+        # Görevi belirtilen öğrencilere ata ve veritabanına ekle
+        for student_id in assigned_students:
+            try:
+                conn = psycopg2.connect(db_url)
+                # Veritabanına yeni görev ekle
+                with conn.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO task (teacher_id, text, date, deadline, status, student_id)
+                        VALUES (%s, %s, CURRENT_TIMESTAMP, %s, FALSE, %s)
+                    """, (global_user_id, task_text, deadline, int(student_id)))
+                conn.commit()
+
+            except Exception as e:
+                print(f"Hata: Görev eklenirken bir sorun oluştu. Hata: {e}")
+
         QMessageBox.information(self, "Success", "Task created successfully!")
 
         # Görev oluşturulduktan sonra formu temizle
@@ -1858,6 +1891,98 @@ class MyMainWindow(QMainWindow):
         self.dateTimeEdit_Deadline.clear()
         self.populate_todo_list()
         self.update_table()
+        self.populate_task_combobox()
+        self.listWidget_AssignList.clearSelection()
+        self.listWidget_AssignList_2.clearSelection()
+        self.populate_students_list()
+
+    def edit_task(self):
+        # Get the selected task text from comboBox_tasks
+        selected_task_text = self.comboBox_tasks.currentText()
+
+        # Get the new task information from listWidget_AssignList_2, plainTextEdit_NewTask_2, and dateTimeEdit_Deadline_2
+        new_assigned_students = [item.text().split(":")[0] for item in self.listWidget_AssignList_2.selectedItems()]
+        new_task_text = self.plainTextEdit_NewTask_2.toPlainText()
+
+        new_deadline_control = self.dateTimeEdit_Deadline_2.date()
+        if new_deadline_control < QDate.currentDate():
+            QMessageBox.warning(self, "Warning", "Selected date cannot be before the current date.")
+            return
+        new_deadline = new_deadline_control.toString("yyyy-MM-dd")
+
+        try:
+            conn = psycopg2.connect(db_url)
+            with conn.cursor() as cursor:
+                # Find all task records with the given text
+                cursor.execute("SELECT task_id, student_id FROM task WHERE text = %s", (selected_task_text,))
+                task_records = cursor.fetchall()
+
+                # Delete existing task records with the given text
+                for task_id, old_student_id in task_records:
+                    cursor.execute("DELETE FROM task WHERE task_id = %s", (task_id,))
+
+                # Create new task records with the new information
+                for _ in new_assigned_students:
+                    cursor.execute("""
+                        INSERT INTO task (teacher_id, text, date, deadline, status, student_id)
+                        VALUES (%s, %s, CURRENT_TIMESTAMP, %s, FALSE, %s)
+                    """, (global_user_id, new_task_text, new_deadline, int(_)))
+
+                conn.commit()
+                QMessageBox.information(self, "Success", "Task edited successfully!")
+
+        except Exception as e:
+            print(f"Hata: Görev düzenlenirken bir sorun oluştu. Hata: {e}")
+
+        finally:
+            self.populate_task_combobox()
+
+            conn.close()
+            
+        self.plainTextEdit_NewTask.clear()
+        self.dateTimeEdit_Deadline.clear()
+        self.populate_todo_list()
+        self.update_table()
+        self.populate_task_combobox()
+        self.listWidget_AssignList.clearSelection()
+        self.listWidget_AssignList_2.clearSelection()        
+        self.populate_students_list()
+
+    def delete_task(self):
+        # Get the selected task text from comboBox_tasks
+        selected_task_text = self.comboBox_tasks.currentText()
+
+        try:
+            conn = psycopg2.connect(db_url)
+            with conn.cursor() as cursor:
+                # Find all task records with the given text
+                cursor.execute("SELECT task_id FROM task WHERE text = %s", (selected_task_text,))
+                task_ids = [record[0] for record in cursor.fetchall()]
+
+                # Delete existing task records with the given text
+                for task_id in task_ids:
+                    cursor.execute("DELETE FROM task WHERE task_id = %s", (task_id,))
+
+                conn.commit()
+                QMessageBox.information(self, "Success", "Task deleted successfully!")
+
+        except Exception as e:
+            print(f"Error during delete_task: {e}")
+
+        finally:
+            conn.close()
+
+        # Refresh the combobox after deleting the task
+        self.plainTextEdit_NewTask.clear()
+        self.dateTimeEdit_Deadline.clear()
+        self.populate_todo_list()
+        self.update_table()
+        self.populate_task_combobox()
+        self.listWidget_AssignList.clearSelection()
+        self.listWidget_AssignList_2.clearSelection()
+        self.populate_students_list()
+
+
 
     def send_announcement(self):
         try:
@@ -1883,7 +2008,9 @@ class MyMainWindow(QMainWindow):
         except Exception as e:
             print(f"Hata: Anons gönderilirken bir sorun oluştu. Hata: {e}")
 
+
     def populate_todo_list(self):
+        
         self.tableWidget_ToDoList.setRowCount(0)  # Önceki verileri temizle
 
         tasks = self.task_manager.get_all_tasks()
@@ -1898,19 +2025,18 @@ class MyMainWindow(QMainWindow):
 
     def populate_students_table(self):
         # Students tablosunu güncelle
-        students = self.task_manager.get_students()
+        students = self.get_students()
         self.tableWidget_Students.setRowCount(len(students))
 
         for row, student in enumerate(students):
-            email = student.get("Email", "")
+            user_id = student.get("user_id", "")
             name = student.get("name", "")
             surname = student.get("surname", "")
-            tasks = self.task_manager.get_student_tasks(email)
+            tasks = self.get_student_tasks(user_id)
 
             # Satırı eklemek için rowCount kullanmamıza gerek yok
             self.tableWidget_Students.insertRow(row)
 
-            self.tableWidget_Students.setItem(row, 2, QTableWidgetItem(email))
             self.tableWidget_Students.setItem(row, 0, QTableWidgetItem(name))
             self.tableWidget_Students.setItem(row, 1, QTableWidgetItem(surname))
 
@@ -1918,7 +2044,63 @@ class MyMainWindow(QMainWindow):
             tasks_text = ", ".join(f"{task.get('id')}={'✅' if task.get('status') else '❌'}" for task in tasks)
 
             # Doğru sütuna QTableWidgetItem ekleyin
-            self.tableWidget_Students.setItem(row, 3, QTableWidgetItem(tasks_text))
+            self.tableWidget_Students.setItem(row, 2, QTableWidgetItem(tasks_text))
+
+    def get_students(self):
+        students = []
+        try:
+            conn = psycopg2.connect(db_url)
+            
+            # Veritabanından öğrenci bilgilerini ve görev sayılarını çek
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        usertable.user_id,
+                        usertable.first_name,
+                        usertable.last_name,
+                        COUNT(task.task_id) as task_count
+                    FROM usertable
+                    LEFT JOIN task ON usertable.user_id = task.student_id
+                    WHERE usertable.user_type = 'Student'
+                    GROUP BY usertable.user_id
+                """)
+                result = cursor.fetchall()
+
+            for row in result:
+                student = {
+                    "user_id": row[0],
+                    "name": row[1],
+                    "surname": row[2],
+                    "task_count": row[3],
+                }
+                students.append(student)
+
+        except Exception as e:
+            print(f"Hata: Öğrenci bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+
+        return students
+    
+    def get_student_tasks(self, user_id):
+        tasks = []
+        try:
+            conn = psycopg2.connect(db_url)
+
+            # Öğrenciye ait görev bilgilerini çek
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT task_id, status FROM task WHERE student_id = %s", (user_id,))
+                result = cursor.fetchall()
+
+            for row in result:
+                task = {
+                    "id": row[0],
+                    "status": row[1],
+                }
+                tasks.append(task)
+
+        except Exception as e:
+            print(f"Hata: Öğrenci görev bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+
+        return tasks    
 
     def save_attendance(self):
         # PushButton_SchSave butonuna tıklandığında çalışacak işlemler
@@ -2006,9 +2188,6 @@ class MyMainWindow(QMainWindow):
         students = self.task_manager.get_students()
         self.tableWidget_Students.setRowCount(len(students))
 
-
-
-
         for row, student in enumerate(students):
             email = student.get("Email", "")
             name = student.get("name", "")
@@ -2028,24 +2207,97 @@ class MyMainWindow(QMainWindow):
             # Doğru sütuna QTableWidgetItem ekleyin
             self.tableWidget_Students.setItem(row, 3, QTableWidgetItem(tasks_text))
 
+
+
+
+
+
+######################################################################################################################
+    def fill_courses(self):
+        """
+        Fills the courses with course/mentor name and dates.
+        """
+        global db_url
+
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+             # Fetch the number of distinct planned courses
+            
+            cur.execute("select count (distinct planned_date) from calendar;")
+            number_of_planned_courses = cur.fetchone()[0]
+
+            courses_query= f"""
+            select DISTINCT planned_date, lesson_name from calendar
+            left join lesson
+            on calendar.lesson_id=lesson.lesson_id
+            order by planned_date
+            """
+            cur.execute(courses_query)
+            course_data = cur.fetchall()
+
+            row=0
+
+            self.course_tableWidget.setRowCount(number_of_planned_courses)  # Set the row count
+
+            for i in course_data:
+                print(i[0]," - ", i[1])
+
+
+                self.course_tableWidget.setItem(row,0,QTableWidgetItem(i[0]))
+                self.course_tableWidget.setItem(row,1, QTableWidgetItem(i[1]))
+
+                self.course_tableWidget.setColumnWidth(0, 150)
+                self.course_tableWidget.setColumnWidth(1, 150)
+                row += 1
+
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()     
+
+
+####################################################################################################################
+
+
+
 class TaskManager:
     def __init__(self):
         self.load_data()
+        
+    def load_data(self):
+        # accounts.json, tasks.json ve announcements.json dosyalarını oku
+        
+        with open('accounts.json', 'r') as f:
+            self.accounts_data = json.load(f)
 
-    def populate_students_list(self):
-        # accounts.json dosyasındaki 'Student' olan öğrencileri listWidget_StudentList'e ekle
-        students = [data for data in self.accounts_data.values() if data.get("Account_Type") == "Student"]
-        for student in students:
-            email = student.get("Email", "")
-            name = student.get("name", "")
-            surname = student.get("surname", "")
-            self.listWidget_studentlist.addItem(f"{name} {surname} ({email})")
+        with open('tasks.json', 'r') as f:
+            self.tasks_data = json.load(f)  
+
+        try:    
+            with open('attendance.json', 'r') as f:
+                self.attendance_data = json.load(f)    
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.attendance_data = {}
+
+        try:
+            with open('announcements.json', 'r') as f:
+                self.announcements_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.announcements_data = []        
+
 
     def get_lessons(self):
         lessons = []
         try:
+            conn = psycopg2.connect(db_url)
+
             # Veritabanından ders adlarını çek
-            with self.db_connection.cursor() as cursor:
+            with conn.cursor() as cursor:
                 cursor.execute("SELECT lesson_name FROM lesson")
                 result = cursor.fetchall()
 
@@ -2068,8 +2320,10 @@ class TaskManager:
     def get_students(self):
         students = []
         try:
+            conn = psycopg2.connect(db_url)
+            
             # Veritabanından öğrenci bilgilerini çek
-            with self.db_connection.cursor() as cursor:
+            with conn.cursor() as cursor:
                 cursor.execute("SELECT user_id, first_name, last_name, email FROM usertable WHERE user_type = 'Student'")
                 result = cursor.fetchall()
 
@@ -2088,53 +2342,22 @@ class TaskManager:
 
         return students
 
-    def get_student_tasks(self, email):
-        # Öğrenciye ait görevleri getir
-        if email in self.tasks_data:
-            return self.tasks_data[email].get("tasks", [])
-        return []
 
-    def create_task(self, assigned_emails, task_text, deadline):
-        # En yüksek task ID'sini bul
-        max_task_id = max(
-            (int(task["id"]) for email_tasks in self.tasks_data.values() for task in email_tasks.get("tasks", [])),
-            default=0)
 
-        # Yeni task ID'sini oluştur
-        new_task_id = str(max_task_id + 1)
-
-        # Yeni bir görev oluştur
-        new_task = {
-            "id": new_task_id,
-            "task": task_text,
-            "status": False,
-            "deadline": deadline
-        }
-
-        # Görevi belirtilen e-posta adreslerine ata
-        for email in assigned_emails:
-            if email in self.tasks_data:
-                # Ensure the "tasks" key exists for the email
-                if "tasks" not in self.tasks_data[email]:
-                    self.tasks_data[email]["tasks"] = []
-                self.tasks_data[email]["tasks"].append(new_task)
-
-        # tasks.json dosyasını güncelle
-        self.save_data()
-        
         
 
     def create_announcement(self, announcement_text, last_date):
         try:
+            conn = psycopg2.connect(db_url)
             # Veritabanına anonsu ekle
             teacher_id = global_user_id  # Bu değeri global_user_id olarak aldık
             date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            with self.db_connection.cursor() as cursor:
+            with conn.cursor() as cursor:
                 cursor.execute(
                     "INSERT INTO announcement (teacher_id, text, date, deadline) VALUES (%s, %s, %s, %s)",
                     (teacher_id, announcement_text, date_created, last_date)
                 )
-            self.db_connection.commit()
+            conn.commit()
 
         except Exception as e:
             print(f"Hata: Anons oluşturulurken bir sorun oluştu. Hata: {e}")
