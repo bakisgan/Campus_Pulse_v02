@@ -1157,7 +1157,6 @@ class Admin(QMainWindow):
                 {"WHERE" if conditions else ""}
                 {where_clause};
             """
-            print(query)
 
             cur.execute(query)
             log_records = cur.fetchall()
