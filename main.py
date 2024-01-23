@@ -963,6 +963,7 @@ class Chatboard(QMainWindow):
         self.history_LE.setReadOnly(True)
         # Connect Enter key press event to send_message method
         self.send_TE.installEventFilter(self)
+        self.fill_courses()
 
 
     def fill_user_list2(self):
@@ -1183,6 +1184,55 @@ class Chatboard(QMainWindow):
     def switch_chatboard(self):
         stackedWidget.setCurrentIndex(6)
         chatboard.fill_user_list2()
+
+
+    def fill_courses(self):
+        """
+        Fills the courses with course/mentor name and dates.
+        """
+        global db_url
+        print("fill courses çalıştırıldı")
+
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+             # Fetch the number of distinct planned courses
+            
+            cur.execute("select count (distinct planned_date) from calendar;")
+            number_of_planned_courses = cur.fetchone()[0]
+
+            courses_query= f"""
+            select DISTINCT planned_date, lesson_name from calendar
+            left join lesson
+            on calendar.lesson_id=lesson.lesson_id
+            order by planned_date
+            """
+            cur.execute(courses_query)
+            course_data = cur.fetchall()
+
+            row=0
+
+            self.courseWidget.setRowCount(number_of_planned_courses)  # Set the row count
+
+            for i in course_data:
+                print(i[0]," - ", i[1])
+
+
+                self.courseWidget.setItem(row,0,QTableWidgetItem(i[0]))
+                self.courseWidget.setItem(row,1, QTableWidgetItem(i[1]))
+
+                self.courseWidget.setColumnWidth(0, 150)
+                self.courseWidget.setColumnWidth(1, 150)
+                row += 1
+
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()    
 
 
 class Main_Window(QMainWindow):
