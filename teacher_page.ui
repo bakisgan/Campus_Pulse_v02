@@ -156,7 +156,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="MainPage">
      <attribute name="title">
@@ -2110,7 +2110,7 @@ selection-background-color: rgb(255, 0, 0);</string>
            <number>0</number>
           </property>
           <property name="text">
-           <string>Task Id-Task </string>
+           <string>Tasks</string>
           </property>
          </widget>
          <widget class="QPushButton" name="pushButton_Edit_Task">
