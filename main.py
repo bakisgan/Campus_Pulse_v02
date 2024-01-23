@@ -1463,10 +1463,10 @@ class MyMainWindow(QMainWindow):
         self.pushButton_announcement.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
 
         self.pushButton_SchSave.clicked.connect(self.save_attendance)
-        self.tableWidget_Students.setColumnWidth(0,100)
-        self.tableWidget_Students.setColumnWidth(1,150)
-        self.tableWidget_Students.setColumnWidth(2,250)
-        self.tableWidget_Students.setColumnWidth(3,335)
+        
+        self.tableWidget_Students.setColumnWidth(0,150)
+        self.tableWidget_Students.setColumnWidth(1,250)
+        self.tableWidget_Students.setColumnWidth(2,335)
 
         self.tableWidget_ToDoList.setColumnWidth(0, 50)  # 0. sütunun genişliği
         self.tableWidget_ToDoList.setColumnWidth(1, 635)  # 1. sütunun genişliği
@@ -1931,19 +1931,18 @@ class MyMainWindow(QMainWindow):
 
     def populate_students_table(self):
         # Students tablosunu güncelle
-        students = self.task_manager.get_students()
+        students = self.get_students()
         self.tableWidget_Students.setRowCount(len(students))
 
         for row, student in enumerate(students):
-            email = student.get("Email", "")
+            user_id = student.get("user_id", "")
             name = student.get("name", "")
             surname = student.get("surname", "")
-            tasks = self.task_manager.get_student_tasks(email)
+            tasks = self.get_student_tasks(user_id)
 
             # Satırı eklemek için rowCount kullanmamıza gerek yok
             self.tableWidget_Students.insertRow(row)
 
-            self.tableWidget_Students.setItem(row, 2, QTableWidgetItem(email))
             self.tableWidget_Students.setItem(row, 0, QTableWidgetItem(name))
             self.tableWidget_Students.setItem(row, 1, QTableWidgetItem(surname))
 
@@ -1951,7 +1950,63 @@ class MyMainWindow(QMainWindow):
             tasks_text = ", ".join(f"{task.get('id')}={'✅' if task.get('status') else '❌'}" for task in tasks)
 
             # Doğru sütuna QTableWidgetItem ekleyin
-            self.tableWidget_Students.setItem(row, 3, QTableWidgetItem(tasks_text))
+            self.tableWidget_Students.setItem(row, 2, QTableWidgetItem(tasks_text))
+
+    def get_students(self):
+        students = []
+        try:
+            conn = psycopg2.connect(db_url)
+            
+            # Veritabanından öğrenci bilgilerini ve görev sayılarını çek
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        usertable.user_id,
+                        usertable.first_name,
+                        usertable.last_name,
+                        COUNT(task.task_id) as task_count
+                    FROM usertable
+                    LEFT JOIN task ON usertable.user_id = task.student_id
+                    WHERE usertable.user_type = 'Student'
+                    GROUP BY usertable.user_id
+                """)
+                result = cursor.fetchall()
+
+            for row in result:
+                student = {
+                    "user_id": row[0],
+                    "name": row[1],
+                    "surname": row[2],
+                    "task_count": row[3],
+                }
+                students.append(student)
+
+        except Exception as e:
+            print(f"Hata: Öğrenci bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+
+        return students
+    
+    def get_student_tasks(self, user_id):
+        tasks = []
+        try:
+            conn = psycopg2.connect(db_url)
+
+            # Öğrenciye ait görev bilgilerini çek
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT task_id, status FROM task WHERE student_id = %s", (user_id,))
+                result = cursor.fetchall()
+
+            for row in result:
+                task = {
+                    "id": row[0],
+                    "status": row[1],
+                }
+                tasks.append(task)
+
+        except Exception as e:
+            print(f"Hata: Öğrenci görev bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+
+        return tasks    
 
     def save_attendance(self):
         # PushButton_SchSave butonuna tıklandığında çalışacak işlemler
@@ -2193,11 +2248,7 @@ class TaskManager:
 
         return students
 
-    def get_student_tasks(self, email):
-        # Öğrenciye ait görevleri getir
-        if email in self.tasks_data:
-            return self.tasks_data[email].get("tasks", [])
-        return []
+
 
         
 
