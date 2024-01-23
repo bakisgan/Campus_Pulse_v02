@@ -1191,7 +1191,6 @@ class Main_Window(QMainWindow):
         super(Main_Window, self).__init__()
 
         loadUi('student.ui', self)  # UI dosyasını yükle
-        # loadUi(r'C:\Users\Gebruiker\Desktop\Python\PYQT5\calendar\student - Kopya (2).ui', self)  # UI dosyasını yükle
         self.pushButton.clicked.connect(self.switch_chatboard)
         self.pushButton_2.clicked.connect(self.switch_userprofile)
         self.back_button.clicked.connect(self.switch_login)
@@ -1208,32 +1207,6 @@ class Main_Window(QMainWindow):
         self.comboBox_2.currentIndexChanged.connect(self.populate_table)
         self.comboBox_3.currentIndexChanged.connect(self.populate_table)
         
-
-#load file 
-        
-        
-
-    def load_attendance(self):
-        try:
-            with open('attendance.json', 'r') as file_2:
-                self.attendance = json.load(file_2)
-        except FileNotFoundError:
-            self.attendance = {}
-
-    # def load_tasks(self):
-    #     try:
-    #         with open('tasks.json', 'r') as file_3:
-    #             self.tasks = json.load(file_3)
-    #     except FileNotFoundError:
-    #         self.tasks = {}
-
-    def load_announcements(self):
-        try:
-            with open('announcements.json', 'r') as file_4:
-                self.announcements = json.load(file_4)
-        except FileNotFoundError:
-            self.announcements = {}
-
 #meeting calendar
     def load_calendar_events(self):
         
@@ -1362,14 +1335,6 @@ class Main_Window(QMainWindow):
                     self.tableWidget.setItem(row_position, 1, item_value)
                     self.tableWidget.setVerticalHeaderItem(row_position, item_date)
         
-                # value_str = str(value)
-                # symbol = '\u2717'
-                # value_with_symbol = f"{value_str} {symbol}"
-
-                # # QTableWidgetItem oluştur ve tabloya ekle
-                # item_value = QTableWidgetItem(value_with_symbol)
-                # self.tableWidget.setItem(row_position, 0, item_value)
-                # self.tableWidget.setVerticalHeaderItem(row_position, item_date)
         
         except Exception as e:
             print(f"Error: {e}")
@@ -1403,7 +1368,7 @@ class Main_Window(QMainWindow):
                     self.table_todolist.setItem(row_position, 1, QTableWidgetItem(str(task_row[2])))
                     self.table_todolist.setItem(row_position, 2, QTableWidgetItem(str(task_row[4])))
                     self.table_todolist.setItem(row_position, 3, QTableWidgetItem(str(teacher_show[0][0])+' '+str(teacher_show[0][1])))
-                    # self.table_todolist.setVerticalHeaderItem(row_position, QTableWidgetItem(str(task_row[0])))
+                   
                 
                     self.check_box = QCheckBox()
                     if task_row[5] == True:
@@ -1457,7 +1422,6 @@ class Main_Window(QMainWindow):
             conn.close()
 
     def onCheckBoxStateChanged(self, state, row):
-        # self.mail = login.email_LE.text()
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
         
@@ -1482,41 +1446,53 @@ class Main_Window(QMainWindow):
             conn.close()
 
 
-# # announcements  
+# announcements  
     def show_announcements(self):
-        # content=self.announcements["content"]
-        # print(t)
-        # for k in self.announcements:
-            # row = self.announcement_widget.rowCount()
             
-            # self.announcement_widget.insertRow(row)
-            # self.announcement_widget.setItem(row, 0, QTableWidgetItem(k["content"]))
-            # self.announcement_widget.setVerticalHeaderItem(row_position, QTableWidgetItem(str(i['id'])))
-            
-        self.announcement_index = 0  # Sıradaki anonsun indeksi
+        self.announcement_i = 0  # Sıradaki anonsun indeksi
 
         # QTimer oluştur
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_announcements)
+        self.timer.timeout.connect(self.up_announcements)
         self.timer.start(1500)  # 5 saniyede bir kontrol et     
-        self.update_announcements()  # Başlangıçta da çalıştır
+        self.up_announcements()  # Başlangıçta da çalıştır
 
-    def update_announcements(self):
-        # Anonsları güncelle
-        self.announcement_textedit.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
-        if self.announcement_index < len(self.announcements):
-            announcement = self.announcements[self.announcement_index]
-            last_date = announcement.get("last_date")
-            current_date = datetime.now().strftime("%Y-%m-%d")
-            if last_date >= current_date:
-                self.announcement_textedit.setText('')
-                self.announcement_textedit.setText('  \u2605  ' + announcement['content']) #ekranda sola bitisik yazmasin
+ # Update announcement
+    def up_announcements(self):
+       
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
 
-            # Bir sonraki anonsa geç
-            self.announcement_index += 1
-        else:
+        try:
+            cur.execute(f"SELECT * FROM announcement order by deadline asc")
+            ann_show=cur.fetchall()
+            self.announcement_textedit.setToolTip("\n".join(str(a[2]) for a in ann_show))
+            
+            if self.announcement_i < len(ann_show):
+                
+                    postgre_date=ann_show[self.announcement_i][4]    
+                    last_date = QDate(postgre_date.year, postgre_date.month, postgre_date.day) #sql den gelen date i QDate formatina cevir
+                    current_date = QDate.currentDate()
+                    
+                    if last_date >= current_date:
+                        self.announcement_textedit.setText('')
+                        self.announcement_textedit.setText(f' 📢❗🚨 {ann_show[self.announcement_i][2]}   Deadline: {ann_show[self.announcement_i][4]} 📢❗🚨') #ekranda sola bitisik yazmasin
+            
+                    # Bir sonraki anonsa geç
+                    self.announcement_i += 1
+            else:
             # Anons listesinin sonuna gelindiğinde başa dön
-            self.announcement_index = 0
+                self.announcement_i = 0
+            
+                
+        except Exception as e:
+            print(f"Error: {e}")
+
+        finally:
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
+
     
     def switch_chatboard(self):
         stackedWidget.setCurrentIndex(6)
@@ -1528,6 +1504,7 @@ class Main_Window(QMainWindow):
     
     def switch_userprofile(self):
         stackedWidget.setCurrentIndex(7)
+
 ########################################################################################################################################    
 class MyMainWindow(QMainWindow):
     def __init__(self):
