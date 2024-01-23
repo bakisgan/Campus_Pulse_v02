@@ -1445,13 +1445,12 @@ class MyMainWindow(QMainWindow):
         self.pushButton_LessonSave.clicked.connect(self.save_lesson)
         self.announcements = []
         self.populate_students_list()
-        self.populate_todo_list()
         self.populate_students_table()
         self.populate_attendance_table()
         self.populate_mentor_attendance_table()
         self.connect_table_signals() 
         self.populate_task_combobox()
-        
+        self.display_upcoming_tasks()
     
         self.pushButton_chatbox.clicked.connect(student.switch_chatboard)
         self.pushButton_profile.clicked.connect(student.switch_userprofile)
@@ -1468,9 +1467,9 @@ class MyMainWindow(QMainWindow):
         self.tableWidget_Students.setColumnWidth(1,250)
         self.tableWidget_Students.setColumnWidth(2,335)
 
-        self.tableWidget_ToDoList.setColumnWidth(0, 50)  # 0. sütunun genişliği
-        self.tableWidget_ToDoList.setColumnWidth(1, 635)  # 1. sütunun genişliği
-        self.tableWidget_ToDoList.setColumnWidth(2, 150)
+        self.tableWidget_ToDoList.setColumnWidth(0, 100)  # 0. sütunun genişliği
+        self.tableWidget_ToDoList.setColumnWidth(1, 100)  # 1. sütunun genişliği
+        self.tableWidget_ToDoList.setColumnWidth(2, 200)
         #self.gecici.clicked.connect(self.fill_courses)
         
         # Create Task butonuna tıklandığında
@@ -1915,19 +1914,42 @@ class MyMainWindow(QMainWindow):
             print(f"Hata: Anons gönderilirken bir sorun oluştu. Hata: {e}")
 
 
-    def populate_todo_list(self):
-        
-        self.tableWidget_ToDoList.setRowCount(0)  # Önceki verileri temizle
+    def display_upcoming_tasks(self):
+        try:
+            conn = psycopg2.connect(db_url)
 
-        tasks = self.task_manager.get_all_tasks()
+            today = datetime.now().date()
 
-        for task in tasks:
-            row_position = self.tableWidget_ToDoList.rowCount()
-            self.tableWidget_ToDoList.insertRow(row_position)
+            # Bugünden sonraki tarihli görevleri çek
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT DISTINCT ON (text) text, deadline, teacher_id
+                    FROM task
+                    WHERE deadline > %s
+                    ORDER BY text, deadline
+                """, (today,))
 
-            self.tableWidget_ToDoList.setItem(row_position, 0, QTableWidgetItem(str(task["id"])))
-            self.tableWidget_ToDoList.setItem(row_position, 1, QTableWidgetItem(task["task"]))
-            self.tableWidget_ToDoList.setItem(row_position, 2, QTableWidgetItem(task["deadline"]))
+                result = cursor.fetchall()
+                print(result)
+
+            # Tabloyu güncelle
+            self.tableWidget_ToDoList.setRowCount(len(result))
+
+            for row, task in enumerate(result):
+                text, deadline, teacher_id = task
+
+                # Satırı eklemek için rowCount kullanmamıza gerek yok
+                self.tableWidget_ToDoList.insertRow(row)
+
+                self.tableWidget_ToDoList.setItem(row, 0, QTableWidgetItem(text))
+                self.tableWidget_ToDoList.setItem(row, 1, QTableWidgetItem(str(deadline)))
+                self.tableWidget_ToDoList.setItem(row, 2, QTableWidgetItem(teacher_id))
+
+        except Exception as e:
+            print(f"Hata: Görev bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+        finally:
+            if conn:
+                conn.close()
 
     def populate_students_table(self):
         # Students tablosunu güncelle

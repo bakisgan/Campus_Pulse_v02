@@ -595,7 +595,7 @@ Login</string>
        <string notr="true">background-color: rgb(228, 192, 180);</string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="Tasks">
        <attribute name="title">
@@ -769,7 +769,7 @@ border-radius:10px;</string>
            <number>10</number>
           </property>
           <property name="columnCount">
-           <number>4</number>
+           <number>3</number>
           </property>
           <attribute name="horizontalHeaderCascadingSectionResizes">
            <bool>false</bool>
@@ -810,14 +810,6 @@ border-radius:10px;</string>
           <row/>
           <row/>
           <row/>
-          <column>
-           <property name="text">
-            <string>TASK ID</string>
-           </property>
-           <property name="textAlignment">
-            <set>AlignCenter</set>
-           </property>
-          </column>
           <column>
            <property name="text">
             <string>TASK</string>
