@@ -205,12 +205,12 @@ border-radius: 15px; </string>
        </property>
        <item>
         <property name="text">
-         <string>Mentor Meeting</string>
+         <string>Mentor Meetings</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Data Science</string>
+         <string>Lessons</string>
         </property>
        </item>
       </widget>
@@ -225,7 +225,7 @@ border-radius: 15px; </string>
        </property>
        <item>
         <property name="text">
-         <string>Make your choice</string>
+         <string>Make Your Choice</string>
         </property>
        </item>
        <item>
@@ -245,6 +245,11 @@ border-radius: 15px; </string>
        <property name="styleSheet">
         <string notr="true">background-color: rgb(200, 161, 164);</string>
        </property>
+       <column>
+        <property name="text">
+         <string>Event</string>
+        </property>
+       </column>
        <column>
         <property name="text">
          <string>Statu</string>
@@ -332,6 +337,11 @@ border-radius: 11px; </string>
          <string>Deadline</string>
         </property>
        </column>
+       <column>
+        <property name="text">
+         <string>Creator</string>
+        </property>
+       </column>
       </widget>
      </item>
     </layout>
@@ -345,7 +355,7 @@ border-radius: 11px; </string>
       <height>241</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
+    <layout class="QVBoxLayout" name="verticalLayout_2" stretch="8,1">
      <item>
       <widget class="QCalendarWidget" name="calendarWidget">
        <property name="font">
@@ -369,6 +379,13 @@ border-radius: 11px; </string>
      </item>
      <item>
       <widget class="QLabel" name="note_edit">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="styleSheet">
         <string notr="true">background-color: rgb(173, 200, 175);
 </string>
@@ -378,6 +395,9 @@ border-radius: 11px; </string>
        </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>

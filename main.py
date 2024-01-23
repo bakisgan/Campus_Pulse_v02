@@ -19,6 +19,7 @@ os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 # Database connection details
 database_name = "db_campusv2"
 user = "postgres"
+# "MerSer01"
 password = "MerSer01"
 host = "localhost"
 port = "5432"
@@ -267,7 +268,7 @@ class Login(QMainWindow):
                         if account_type == "Student":
                             stackedWidget.setCurrentIndex(3)
                             student.load_attendance()
-                            student.load_tasks()
+                            # student.load_tasks()
                             student.load_announcements()
                             student.load_calendar_events()
                             student.show_tasks()
@@ -963,6 +964,7 @@ class Chatboard(QMainWindow):
         self.history_LE.setReadOnly(True)
         # Connect Enter key press event to send_message method
         self.send_TE.installEventFilter(self)
+        self.fill_courses()
 
 
     def fill_user_list2(self):
@@ -1185,13 +1187,60 @@ class Chatboard(QMainWindow):
         chatboard.fill_user_list2()
 
 
+    def fill_courses(self):
+        """
+        Fills the courses with course/mentor name and dates.
+        """
+        global db_url
+        print("fill courses çalıştırıldı")
+
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+             # Fetch the number of distinct planned courses
+            
+            cur.execute("select count (distinct planned_date) from calendar;")
+            number_of_planned_courses = cur.fetchone()[0]
+
+            courses_query= f"""
+            select DISTINCT planned_date, lesson_name from calendar
+            left join lesson
+            on calendar.lesson_id=lesson.lesson_id
+            order by planned_date
+            """
+            cur.execute(courses_query)
+            course_data = cur.fetchall()
+
+            row=0
+
+            self.courseWidget.setRowCount(number_of_planned_courses)  # Set the row count
+
+            for i in course_data:
+                print(i[0]," - ", i[1])
+
+
+                self.courseWidget.setItem(row,0,QTableWidgetItem(i[0]))
+                self.courseWidget.setItem(row,1, QTableWidgetItem(i[1]))
+
+                self.courseWidget.setColumnWidth(0, 150)
+                self.courseWidget.setColumnWidth(1, 150)
+                row += 1
+
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()    
+
+
 class Main_Window(QMainWindow):
     def __init__(self):
         super(Main_Window, self).__init__()
 
-
         loadUi('student.ui', self)  # UI dosyasını yükle
-        # loadUi(r'C:\Users\Gebruiker\Desktop\Python\PYQT5\calendar\student - Kopya (2).ui', self)  # UI dosyasını yükle
         self.pushButton.clicked.connect(self.switch_chatboard)
         self.pushButton_2.clicked.connect(self.switch_userprofile)
         self.back_button.clicked.connect(self.switch_login)
@@ -1208,60 +1257,50 @@ class Main_Window(QMainWindow):
         self.comboBox_2.currentIndexChanged.connect(self.populate_table)
         self.comboBox_3.currentIndexChanged.connect(self.populate_table)
         
-
-#load file 
-        
-        
-
-    def load_attendance(self):
-        try:
-            with open('attendance.json', 'r') as file_2:
-                self.attendance = json.load(file_2)
-        except FileNotFoundError:
-            self.attendance = {}
-
-    def load_tasks(self):
-        try:
-            with open('tasks.json', 'r') as file_3:
-                self.tasks = json.load(file_3)
-        except FileNotFoundError:
-            self.tasks = {}
-
-    def load_announcements(self):
-        try:
-            with open('announcements.json', 'r') as file_4:
-                self.announcements = json.load(file_4)
-        except FileNotFoundError:
-            self.announcements = {}
-
 #meeting calendar
     def load_calendar_events(self):
-        self.mail = login.email_LE.text()
-
-        if self.mail in self.attendance:
-            meeting = self.attendance[self.mail]
-            mentor = meeting["Mentor Meeting"]
-            data_science = meeting["Data Science"]
         
-            for date_str in mentor.keys():
-                date = QDate.fromString(str(date_str), Qt.ISODate)
-                if date.isValid():  #and result1==['Mentor']:
-                    self.calendar.setDateTextFormat(date, self.get_calendar_event_format1())
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        try:
+            cur.execute('SELECT lesson_id, planned_date FROM calendar')
+            date_show=cur.fetchall()
 
-            for date_str in data_science.keys():
-                date = QDate.fromString(str(date_str), Qt.ISODate)
-                if date.isValid():  #and result2==['Data Science']:
-                    self.calendar.setDateTextFormat(date, self.get_calendar_event_format2())
-
-            selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
-            if selected_date in data_science:
-                self.note_edit.setText('Data Science Course')
-            elif selected_date in mentor:
-                self.note_edit.setText('Mentor Meeting')
+            if date_show:
+                
+                for date_str in date_show:
+                    date = QDate.fromString(str(date_str[1]), Qt.ISODate)
+                    if date.isValid() and (str(date_str[0])!="1"):  #and result1==['Mentor']:
+                        self.calendar.setDateTextFormat(date, self.get_calendar_event_format1())
+                    else:
+                        self.calendar.setDateTextFormat(date, self.get_calendar_event_format2())
+            
+                selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
+                cur.execute(f"SELECT lesson_id FROM calendar where planned_date = '{selected_date}'")
+                lesson_show=cur.fetchone()
+                if lesson_show == None:
+                    self.note_edit.clear() 
+                else:   
+                    cur.execute(f"SELECT lesson_name FROM lesson where lesson_id = '{lesson_show[0]}'")
+                    nameles = cur.fetchone()
+                    # selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
+              
+                    les=nameles[0]
+                    print(les)
+                    self.note_edit.setText(str(les))
+                
             else:
-                self.note_edit.clear()
-        else:
-            pass
+                pass
+
+            conn.commit()
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+        finally:
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
 
 
     def get_calendar_event_format1(self):
@@ -1284,10 +1323,12 @@ class Main_Window(QMainWindow):
 
 #status of attendance
     def populate_table(self):
-        self.mail = login.email_LE.text()
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        try:
+            
 
-        if self.mail in self.attendance:
-      
+    
             for i in range(self.tableWidget.rowCount() - 1, -1, -1):
                 is_row_empty = all(self.tableWidget.item(i, j) is None or self.tableWidget.item(i, j).text() == '' for j in range(self.tableWidget.columnCount()))
                 if not is_row_empty:
@@ -1296,133 +1337,212 @@ class Main_Window(QMainWindow):
             filter_statu1 = self.comboBox_2.currentText()
             filter_statu2 = self.comboBox_3.currentText()
 
-            dates = self.attendance[self.mail]
-            result = dates[filter_statu1]
-            for date, value in result.items():
+            if filter_statu1=='Mentor Meetings': 
+                cur.execute(f'SELECT lesson_id, planned_date, status FROM calendar WHERE student_id={global_user_id} and lesson_id =1 order by planned_date asc')
+                event_show=cur.fetchall()
+                cur.execute(f'SELECT lesson_name FROM lesson WHERE lesson_id = 1')
+                lesname=cur.fetchall()  
+                x_name = str(lesname[0])     
+            else:
+                cur.execute(f'SELECT lesson_id, planned_date, status FROM calendar WHERE student_id={global_user_id} and lesson_id !=1 order by planned_date asc')
+                event_show=cur.fetchall()
+                cur.execute(f'SELECT lesson_name FROM lesson WHERE lesson_id != 1')
+                lesname=cur.fetchall()  
+                
+            i=0
+            for a in event_show:
+                if len(lesname)>1:
+                    x_name = str(lesname[i][0]) # lesson name icin dongu
+                    i+=1
+                else:
+                    x_name = str(lesname[0][0]) # mentor icin sadece 1 isim var o yuzden tekli geliyor
+                if a[2]==False:
+                    value='Not Attended'
+                else:
+                    value='Attended'
 
-                if value==filter_statu2 and QDate.fromString(date, "yyyy-MM-dd") <= QDate.currentDate():
+                postgre_date=a[1]    
+                qdate = QDate(postgre_date.year, postgre_date.month, postgre_date.day) #sql den gelen date i QDate formatina cevir
+                current_date = QDate.currentDate()
+
+                if value==filter_statu2 and qdate <= current_date:
                     row_position = self.tableWidget.rowCount()
                     self.tableWidget.insertRow(row_position)
-                    item_date = QTableWidgetItem(date)
+                    item_date = QTableWidgetItem(qdate.toString("yyyy-MM-dd")) # date i string olarak yazdir
                     item_value = QTableWidgetItem(str(value))
-                    self.tableWidget.setItem(row_position, 0, item_value)
+                    item_event = QTableWidgetItem(x_name)
+                    self.tableWidget.setItem(row_position, 0, item_event)
+                    self.tableWidget.setItem(row_position, 1, item_value)
                     self.tableWidget.setVerticalHeaderItem(row_position, item_date)
-                if filter_statu2=='Make your choice' and (filter_statu1=='Mentor Meeting' or filter_statu1=='Data Science') and QDate.fromString(date, "yyyy-MM-dd") <= QDate.currentDate():
+
+                if filter_statu2=='Make Your Choice' and (filter_statu1=='Mentor Meetings' or filter_statu1=='Lessons') and qdate <= current_date:
                     row_position = self.tableWidget.rowCount()
                     self.tableWidget.insertRow(row_position)
-                    item_date = QTableWidgetItem(date)
+                    item_date = QTableWidgetItem(qdate.toString("yyyy-MM-dd"))
                     item_value = QTableWidgetItem(str(value))
-                    self.tableWidget.setItem(row_position, 0, item_value)
+                    item_event = QTableWidgetItem(x_name)
+                    self.tableWidget.setItem(row_position, 0, item_event)
+                    self.tableWidget.setItem(row_position, 1, item_value)
                     self.tableWidget.setVerticalHeaderItem(row_position, item_date)
-        else:
-            pass
+        
+        
+        except Exception as e:
+            print(f"Error: {e}")
 
-                # value_str = str(value)
-                # symbol = '\u2717'
-                # value_with_symbol = f"{value_str} {symbol}"
-
-                # # QTableWidgetItem oluştur ve tabloya ekle
-                # item_value = QTableWidgetItem(value_with_symbol)
-                # self.tableWidget.setItem(row_position, 0, item_value)
-                # self.tableWidget.setVerticalHeaderItem(row_position, item_date)
+        finally:
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
 
 # to do list
     def show_tasks(self):
-        self.mail = login.email_LE.text()
 
-        if self.mail in self.tasks:
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
 
-            assignment=self.tasks[self.mail]
-            self.mission=assignment['tasks']
-            self.check_boxes = []
+        try:
+            cur.execute(f"SELECT * FROM task WHERE student_id = {global_user_id} order by deadline asc")
+            task_show=cur.fetchall()
 
-        
-            for i in self.mission:
-                row_position = self.table_todolist.rowCount()
+
+            if task_show:
+                # Görevleri göster
+                self.check_boxes = []
+
+                
+                for task_row in task_show:
+                    cur.execute(f"SELECT first_name, last_name FROM usertable WHERE user_id = {str(task_row[1])};")
+                    teacher_show=cur.fetchall()
+                    row_position = self.table_todolist.rowCount()
+                    self.table_todolist.insertRow(row_position)
+                    self.table_todolist.setItem(row_position, 1, QTableWidgetItem(str(task_row[2])))
+                    self.table_todolist.setItem(row_position, 2, QTableWidgetItem(str(task_row[4])))
+                    self.table_todolist.setItem(row_position, 3, QTableWidgetItem(str(teacher_show[0][0])+' '+str(teacher_show[0][1])))
+                   
+                
+                    self.check_box = QCheckBox()
+                    if task_row[5] == True:
+                        self.check_box.setChecked(True)
+                    else:
+                        self.check_box.setChecked(False)
+
+                    self.table_todolist.setCellWidget(row_position,0, self.check_box)
+                    self.check_boxes.append(self.check_box)
+
             
-                self.table_todolist.insertRow(row_position)
-                self.table_todolist.setItem(row_position, 1, QTableWidgetItem(str(i['task'])))
-                self.table_todolist.setItem(row_position, 2, QTableWidgetItem(i['deadline']))
-                self.table_todolist.setVerticalHeaderItem(row_position, QTableWidgetItem(str(i['id'])))
-            
-                self.check_box = QCheckBox()
-                if self.mission[row_position]['status'] == True:
-                    self.check_box.setChecked(True)
-                else:
-                    self.check_box.setChecked(False)
-                self.table_todolist.setCellWidget(row_position,0, self.check_box)
 
-                self.check_boxes.append(self.check_box)
-
+                self.table_todolist.setColumnWidth(0,30)
+                self.table_todolist.setColumnWidth(1,325)
+                self.table_todolist.setColumnWidth(2,90)
+                self.table_todolist.setColumnWidth(3,90)
         
+                self.connect_check_boxes()
+            else:
+                pass
 
-            self.table_todolist.setColumnWidth(0,30)
-            self.table_todolist.setColumnWidth(1,415)
-            self.table_todolist.setColumnWidth(2,100)
-     
+            # Commit the changes to the database
+            conn.commit()
 
-            self.connect_check_boxes()
-        else:
-            pass
+            print("Tasks showed successfully!")
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+        finally:
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
 
 # to do list check
     def connect_check_boxes(self):
-        for row, check_box in enumerate(self.check_boxes):
-            check_box.stateChanged.connect(lambda state, r=row: self.onCheckBoxStateChanged(state, r))
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()    
+
+        try:
+        
+            for row, check_box in enumerate(self.check_boxes):
+                check_box.stateChanged.connect(lambda state, r=row: self.onCheckBoxStateChanged(state, r))
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+        finally:
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
 
     def onCheckBoxStateChanged(self, state, row):
-        self.mail = login.email_LE.text()
-        if self.mail in self.tasks:
-            self.assignment=self.tasks[self.mail]
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        
 
+        try:
+
+            cur.execute(f"SELECT * FROM task WHERE student_id = {global_user_id} order by deadline asc")
+            task_show=cur.fetchall()
             if state == 2:  # Qt.Checked
-                self.mission[row]['status'] = True   
+                cur.execute(f"UPDATE task SET status = TRUE WHERE task_id={task_show[row][0]}")
             else:
-                self.mission[row]['status'] = False 
+                cur.execute(f"UPDATE task SET status = FALSE WHERE task_id={task_show[row][0]}")
 
-            with open('tasks.json', 'w') as json_file:
-                    json.dump(self.tasks, json_file, indent=2)
-        else:
-            pass
-        # print(self.mission[row]['status'])
-            
+            conn.commit()
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+        finally:
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
 
 
-# # announcements  
+# announcements  
     def show_announcements(self):
-        # content=self.announcements["content"]
-        # print(t)
-        # for k in self.announcements:
-            # row = self.announcement_widget.rowCount()
             
-            # self.announcement_widget.insertRow(row)
-            # self.announcement_widget.setItem(row, 0, QTableWidgetItem(k["content"]))
-            # self.announcement_widget.setVerticalHeaderItem(row_position, QTableWidgetItem(str(i['id'])))
-            
-        self.announcement_index = 0  # Sıradaki anonsun indeksi
+        self.announcement_i = 0  # Sıradaki anonsun indeksi
 
         # QTimer oluştur
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_announcements)
+        self.timer.timeout.connect(self.up_announcements)
         self.timer.start(1500)  # 5 saniyede bir kontrol et     
-        self.update_announcements()  # Başlangıçta da çalıştır
+        self.up_announcements()  # Başlangıçta da çalıştır
 
-    def update_announcements(self):
-        # Anonsları güncelle
-        self.announcement_textedit.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
-        if self.announcement_index < len(self.announcements):
-            announcement = self.announcements[self.announcement_index]
-            last_date = announcement.get("last_date")
-            current_date = datetime.now().strftime("%Y-%m-%d")
-            if last_date >= current_date:
-                self.announcement_textedit.setText('')
-                self.announcement_textedit.setText('  \u2605  ' + announcement['content']) #ekranda sola bitisik yazmasin
+ # Update announcement
+    def up_announcements(self):
+       
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
 
-            # Bir sonraki anonsa geç
-            self.announcement_index += 1
-        else:
+        try:
+            cur.execute(f"SELECT * FROM announcement order by deadline asc")
+            ann_show=cur.fetchall()
+            self.announcement_textedit.setToolTip("\n".join(str(a[2]) for a in ann_show))
+            
+            if self.announcement_i < len(ann_show):
+                
+                    postgre_date=ann_show[self.announcement_i][4]    
+                    last_date = QDate(postgre_date.year, postgre_date.month, postgre_date.day) #sql den gelen date i QDate formatina cevir
+                    current_date = QDate.currentDate()
+                    
+                    if last_date >= current_date:
+                        self.announcement_textedit.setText('')
+                        self.announcement_textedit.setText(f' 📢❗🚨 {ann_show[self.announcement_i][2]}   Deadline: {ann_show[self.announcement_i][4]} 📢❗🚨') #ekranda sola bitisik yazmasin
+            
+                    # Bir sonraki anonsa geç
+                    self.announcement_i += 1
+            else:
             # Anons listesinin sonuna gelindiğinde başa dön
-            self.announcement_index = 0
+                self.announcement_i = 0
+            
+                
+        except Exception as e:
+            print(f"Error: {e}")
+
+        finally:
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
+
     
     def switch_chatboard(self):
         stackedWidget.setCurrentIndex(6)
@@ -1434,6 +1554,7 @@ class Main_Window(QMainWindow):
     
     def switch_userprofile(self):
         stackedWidget.setCurrentIndex(7)
+
 ########################################################################################################################################    
 class MyMainWindow(QMainWindow):
     def __init__(self):
