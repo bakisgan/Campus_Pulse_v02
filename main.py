@@ -805,6 +805,9 @@ class Admin(QMainWindow):
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setHorizontalHeaderLabels([ "Select", "Email", "Name", "Surname"])
         self.courseWidget.itemSelectionChanged.connect(self.fill_students)
+        self.populate_user_combobox()
+        self.populate_transaction_combobox()
+        self.filter_button.clicked.connect(self.fill_logdata)
 
         self.fill_table()
 
@@ -1084,6 +1087,118 @@ class Admin(QMainWindow):
             cur.close()
             conn.close()
 
+    def populate_user_combobox(self):
+            # Populate the combo box with user emails from usertable
+            global db_url
+            try:
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                cur.execute("SELECT email FROM usertable;")
+                user_emails = cur.fetchall()
+                self.Users_combo.addItem("None")
+                for email in user_emails:
+                    self.Users_combo.addItem(email[0])
+            except Exception as e:
+                print(f"Error populating user combo box: {e}")
+            finally:
+                cur.close()
+                conn.close()
+    
+    def populate_transaction_combobox(self):
+            # Populate the combo box with user emails from usertable
+            global db_url
+            try:
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                cur.execute("SELECT DISTINCT event_type FROM logtable;")
+                transactions = cur.fetchall()
+                self.Transaction_combo.addItem("None")
+                for transaction in transactions:
+                    self.Transaction_combo.addItem(transaction[0])
+            except Exception as e:
+                print(f"Error populating user combo box: {e}")
+            finally:
+                cur.close()
+                conn.close()
+    
+    def fill_logdata(self):
+        """
+        Fills the table with log data
+        """
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            selected_email = self.Users_combo.currentText()
+            cur.execute("SELECT user_id FROM usertable WHERE email = %s", (selected_email,))
+            selected_user = cur.fetchone()[0] if cur.rowcount > 0 else None
+
+            selected_transaction = self.Transaction_combo.currentText()
+            selected_date = self.logcalendarWidget.selectedDate().toString("yyyy-MM-dd")
+
+            conditions = []
+
+            if selected_user:
+                conditions.append(f"logtable.user_id = '{selected_user}'")
+
+            if selected_transaction != "None":
+                conditions.append(f"logtable.event_type = '{selected_transaction}'")
+
+            if selected_date != "2024-01-01":
+                conditions.append(f"DATE(logtable.time_stamp) = '{selected_date}'")
+
+            # Construct the SQL query
+            where_clause = " AND ".join(conditions)
+            query = f"""
+                SELECT usertable.first_name, usertable.last_name, logtable.event_type, logtable.time_stamp, logtable.action, logtable.type
+                FROM logtable
+                LEFT JOIN usertable ON logtable.user_id = usertable.user_id
+                {"WHERE" if conditions else ""}
+                {where_clause};
+            """
+            print(query)
+
+            cur.execute(query)
+            log_records = cur.fetchall()
+            number_of_records = len(log_records)
+
+            self.logtablewidget.setColumnCount(5)
+            self.logtablewidget.setHorizontalHeaderLabels(["Name", "Event", "Date", "Action", "Type"])
+            self.logtablewidget.setColumnWidth(0, 150)
+            self.logtablewidget.setColumnWidth(1, 150)
+            self.logtablewidget.setColumnWidth(2, 150)
+            self.logtablewidget.setColumnWidth(3, 150)
+            self.logtablewidget.setColumnWidth(4, 150)
+
+            self.logtablewidget.setRowCount(number_of_records)
+
+            row = 0
+            for i in range(number_of_records):
+                name = log_records[i][0] + " " + log_records[i][1]
+                event = log_records[i][2]
+                date = str(log_records[i][3])
+                action = log_records[i][4]
+                tip = log_records[i][5]
+
+                self.logtablewidget.setItem(row, 0, QTableWidgetItem(name))
+                self.logtablewidget.setItem(row, 1, QTableWidgetItem(event))
+                self.logtablewidget.setItem(row, 2, QTableWidgetItem(date))
+                self.logtablewidget.setItem(row, 3, QTableWidgetItem(action))
+                self.logtablewidget.setItem(row, 4, QTableWidgetItem(tip))
+
+                row += 1
+
+        except Exception as e:
+            print(f"Error loading data: {e}")
+        finally:
+            cur.close()
+            conn.close()
+
+        # Clear the date selection in the logcalendarWidget
+        self.logcalendarWidget.setSelectedDate(QDate(2024, 1, 1))
+
+    
 
     
 class Chatboard(QMainWindow):
