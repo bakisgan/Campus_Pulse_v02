@@ -995,63 +995,55 @@ class Admin(QMainWindow):
             conn = psycopg2.connect(db_url)
             cur = conn.cursor()
 
-             # Fetch the count of pending accounts
-            
+            # Fetch the count of pending accounts
             lessondate = '2024-01-25 00:00:00'
-            lessonname= 'Mathematics'
-            
-            self.studentWidget.setColumnCount(3)
-            self.studentWidget.setHorizontalHeaderLabels([ "Attendance", "Date", "Name"])
-            self.studentWidget.setColumnWidth(0, 30)
-            self.studentWidget.setColumnWidth(1, 150)
-            self.studentWidget.setColumnWidth(2, 150)
+            lessonname = 'Mathematics'
 
-            # Fetch number of students assigned to lesson
-            query1=f'''select count(student_id) from calendar
-            left join lesson
-            on calendar.lesson_id=lesson.lesson_id
-            where planned_date = {lessondate} and lesson_name ={lessonname}'
-            '''
+            self.studentWidget.setColumnCount(2)
+            self.studentWidget.setHorizontalHeaderLabels(["Attendance", "Name"])
+            self.studentWidget.setColumnWidth(0, 100)
+            self.studentWidget.setColumnWidth(1, 300)
+
+            # Fetch number of students assigned to the lesson
+            query1 = f'''SELECT COUNT(student_id) FROM calendar
+                        LEFT JOIN lesson ON calendar.lesson_id = lesson.lesson_id
+                        WHERE planned_date = '{lessondate}' AND lesson_name = '{lessonname}';
+                    '''
             cur.execute(query1)
-
             number_of_students = cur.fetchone()[0]
 
             row = 0
             self.studentWidget.setRowCount(number_of_students)
 
-            lessonname='Mathematics'
-            lessondate='2024-01-25 00:00:00'
-
-            # Fetch data of students assigned to lesson
-            query2=f'''SELECT calendar.student_id, calendar.status, usertable.first_name, usertable.last_name
-            FROM calendar
-            LEFT JOIN lesson ON calendar.lesson_id = lesson.lesson_id
-            LEFT JOIN usertable ON calendar.student_id = usertable.user_id
-            WHERE calendar.planned_date = {lessondate}
-                AND lesson.lesson_name = {lessonname}'
-            '''
+            # Fetch data of students assigned to the lesson
+            query2 = f'''SELECT calendar.student_id, calendar.status, usertable.first_name, usertable.last_name
+                        FROM calendar
+                        LEFT JOIN lesson ON calendar.lesson_id = lesson.lesson_id
+                        LEFT JOIN usertable ON calendar.student_id = usertable.user_id
+                        WHERE calendar.planned_date = '{lessondate}' AND lesson.lesson_name = '{lessonname}';
+                    '''
 
             # Fetch the data for pending accounts
             cur.execute(query2)
             student_data = cur.fetchall()
 
             for i in range(number_of_students):
-                print(firstname)
                 checkbox = QCheckBox()
                 studentid = student_data[i][0]
                 attendance_status = student_data[i][1]
-                firstname= student_data[i][2]
+                firstname = student_data[i][2]
                 lastname = student_data[i][3]
-                checkbox.setChecked(attendance_status) 
+                checkbox.setChecked(attendance_status)
                 self.studentWidget.setCellWidget(row, 0, checkbox)
-                self.studentWidget.setItem(row, 1, QTableWidgetItem(firstname))
-                self.studentWidget.setItem(row, 2, QTableWidgetItem(lastname))
+                self.studentWidget.setItem(row, 1, QTableWidgetItem(f"{firstname} {lastname}"))
                 row += 1
+                print(firstname)
         except Exception as e:
-           print(f"Error loading data: {e}")
+            print(f"Error loading data: {e}")
         finally:
             cur.close()
             conn.close()
+
     
 class Chatboard(QMainWindow):
     """
@@ -2336,52 +2328,52 @@ class MyMainWindow(QMainWindow):
 
 
 ######################################################################################################################
-    def fill_courses(self):
-        """
-        Fills the courses with course/mentor name and dates.
-        """
-        global db_url
+    # def fill_courses(self):
+    #     """
+    #     Fills the courses with course/mentor name and dates.
+    #     """
+    #     global db_url
 
-        try:
-            conn = psycopg2.connect(db_url)
-            cur = conn.cursor()
+    #     try:
+    #         conn = psycopg2.connect(db_url)
+    #         cur = conn.cursor()
 
-             # Fetch the number of distinct planned courses
+    #          # Fetch the number of distinct planned courses
             
-            cur.execute("select count (distinct planned_date) from calendar;")
-            number_of_planned_courses = cur.fetchone()[0]
+    #         cur.execute("select count (distinct planned_date) from calendar;")
+    #         number_of_planned_courses = cur.fetchone()[0]
 
-            courses_query= f"""
-            select DISTINCT planned_date, lesson_name from calendar
-            left join lesson
-            on calendar.lesson_id=lesson.lesson_id
-            order by planned_date
-            """
-            cur.execute(courses_query)
-            course_data = cur.fetchall()
+    #         courses_query= f"""
+    #         select DISTINCT planned_date, lesson_name from calendar
+    #         left join lesson
+    #         on calendar.lesson_id=lesson.lesson_id
+    #         order by planned_date
+    #         """
+    #         cur.execute(courses_query)
+    #         course_data = cur.fetchall()
 
-            row=0
+    #         row=0
 
-            self.course_tableWidget.setRowCount(number_of_planned_courses)  # Set the row count
+    #         self.course_tableWidget.setRowCount(number_of_planned_courses)  # Set the row count
 
-            for i in course_data:
-                print(i[0]," - ", i[1])
+    #         for i in course_data:
+    #             print(i[0]," - ", i[1])
 
 
-                self.course_tableWidget.setItem(row,0,QTableWidgetItem(i[0]))
-                self.course_tableWidget.setItem(row,1, QTableWidgetItem(i[1]))
+    #             self.course_tableWidget.setItem(row,0,QTableWidgetItem(i[0]))
+    #             self.course_tableWidget.setItem(row,1, QTableWidgetItem(i[1]))
 
-                self.course_tableWidget.setColumnWidth(0, 150)
-                self.course_tableWidget.setColumnWidth(1, 150)
-                row += 1
+    #             self.course_tableWidget.setColumnWidth(0, 150)
+    #             self.course_tableWidget.setColumnWidth(1, 150)
+    #             row += 1
 
-        except Exception as e:
-            # Rollback the transaction in case of an error
-            conn.rollback()
-            print(f"Error: {str(e)}")
-        finally:
-            cur.close()
-            conn.close()     
+    #     except Exception as e:
+    #         # Rollback the transaction in case of an error
+    #         conn.rollback()
+    #         print(f"Error: {str(e)}")
+    #     finally:
+    #         cur.close()
+    #         conn.close()     
 
 
 ####################################################################################################################
