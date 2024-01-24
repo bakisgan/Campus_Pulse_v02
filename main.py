@@ -2167,8 +2167,10 @@ class MyMainWindow(QMainWindow):
         cursor.execute("SELECT deadline FROM task WHERE text = %s", (selected_task_text,))
         deadline = cursor.fetchall()
    
-        # self.dateTimeEdit_Deadline.setDate(QDate(deadline[0][0]))
-        self.dateTimeEdit_Deadline.setDate(2024,1,8)
+        try:
+            self.dateTimeEdit_Deadline_2.setDate(QDate(deadline[0][0]))
+        except:
+            print("hata")
 
         conn.close()
 
