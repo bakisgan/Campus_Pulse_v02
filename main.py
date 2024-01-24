@@ -1356,7 +1356,7 @@ class Main_Window(QMainWindow):
                     # selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
               
                     les=nameles[0]
-                    print(les)
+                    # print(les)
                     self.note_edit.setText(str(les))
                 
             else:
@@ -1750,7 +1750,7 @@ class MyMainWindow(QMainWindow):
             selected_row=selected_items[0].row()
             lessondate=self.courseWidget.item(selected_row,0).text()
             lessonname=self.courseWidget.item(selected_row,1).text()
-            print(lessondate,lessonname)
+          
 
             # lessondate = '2024-01-25 00:00:00'
             # lessonname = 'Mathematics'
@@ -1797,7 +1797,6 @@ class MyMainWindow(QMainWindow):
                 self.studentWidget.setCellWidget(row, 0, checkbox)
                 self.studentWidget.setItem(row, 1, QTableWidgetItem(f"{firstname} {lastname}"))
                 row += 1
-                print(firstname)
         except Exception as e:
             print(f"Error loading data: {e}")
         finally:
@@ -1890,7 +1889,6 @@ class MyMainWindow(QMainWindow):
             with conn.cursor() as cursor:
                 cursor.execute("SELECT announcement_id, text FROM announcement WHERE deadline >= %s", (current_date.toString("yyyy-MM-dd"),))
                 announcements = cursor.fetchall()
-                print(announcements)
 
             # comboBox_announcement'ı doldur
             self.comboBox_announcement.clear()  # Combobox'ı temizle
@@ -2515,7 +2513,7 @@ class MyMainWindow(QMainWindow):
         selected_course_item  = self.listWidget_coursemeet_2.currentItem()
         planned_date = self.dateTimeEdit_sch_2.dateTime().toString("yyyy-MM-dd hh:mm:ss")
         teacher_id = global_user_id
-        print(planned_date)
+
         # Eğer currentItem varsa devam et, yoksa uyarı ver ve işlemi sonlandır
         if selected_course_item is None:
             QMessageBox.warning(self, "Warning", "Lütfen bir ders seçin.")
@@ -2602,63 +2600,13 @@ class MyMainWindow(QMainWindow):
 
 
 
-######################################################################################################################
-    # def fill_courses(self):
-    #     """
-    #     Fills the courses with course/mentor name and dates.
-    #     """
-    #     global db_url
-
-    #     try:
-    #         conn = psycopg2.connect(db_url)
-    #         cur = conn.cursor()
-
-    #          # Fetch the number of distinct planned courses
-            
-    #         cur.execute("select count (distinct planned_date) from calendar;")
-    #         number_of_planned_courses = cur.fetchone()[0]
-
-    #         courses_query= f"""
-    #         select DISTINCT planned_date, lesson_name from calendar
-    #         left join lesson
-    #         on calendar.lesson_id=lesson.lesson_id
-    #         order by planned_date
-    #         """
-    #         cur.execute(courses_query)
-    #         course_data = cur.fetchall()
-
-    #         row=0
-
-    #         self.course_tableWidget.setRowCount(number_of_planned_courses)  # Set the row count
-
-    #         for i in course_data:
-    #             print(i[0]," - ", i[1])
-
-
-    #             self.course_tableWidget.setItem(row,0,QTableWidgetItem(i[0]))
-    #             self.course_tableWidget.setItem(row,1, QTableWidgetItem(i[1]))
-
-    #             self.course_tableWidget.setColumnWidth(0, 150)
-    #             self.course_tableWidget.setColumnWidth(1, 150)
-    #             row += 1
-
-    #     except Exception as e:
-    #         # Rollback the transaction in case of an error
-    #         conn.rollback()
-    #         print(f"Error: {str(e)}")
-    #     finally:
-    #         cur.close()
-    #         conn.close()     
-
-
-####################################################################################################################
-
 
 
 class TaskManager:
     def __init__(self):
+        pass
 
-        
+   
 
 
 
