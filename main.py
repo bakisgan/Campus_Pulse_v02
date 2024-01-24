@@ -1985,7 +1985,7 @@ class MyMainWindow(QMainWindow):
 
     def save_lesson(self):
         # Kullanıcı tarafından girilen ders adını al
-        lesson_name = self.textEdit_lesson.toPlainText()
+        lesson_name = self.textEdit_lesson_2.toPlainText()
 
         # Ders adını kontrol et
         if not lesson_name:
