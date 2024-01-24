@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>808</width>
+    <width>885</width>
     <height>563</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
      <rect>
       <x>30</x>
       <y>10</y>
-      <width>751</width>
+      <width>821</width>
       <height>61</height>
      </rect>
     </property>
@@ -44,7 +44,7 @@
    <widget class="QPushButton" name="Back_Log_but">
     <property name="geometry">
      <rect>
-      <x>650</x>
+      <x>720</x>
       <y>220</y>
       <width>151</width>
       <height>31</height>
@@ -62,7 +62,7 @@
      <rect>
       <x>30</x>
       <y>100</y>
-      <width>611</width>
+      <width>681</width>
       <height>192</height>
      </rect>
     </property>
@@ -73,7 +73,7 @@
    <widget class="QPushButton" name="Approve_but">
     <property name="geometry">
      <rect>
-      <x>650</x>
+      <x>720</x>
       <y>100</y>
       <width>151</width>
       <height>31</height>
@@ -90,7 +90,7 @@ background-color: rgb(0, 85, 0);</string>
    <widget class="QPushButton" name="Discard_but">
     <property name="geometry">
      <rect>
-      <x>650</x>
+      <x>720</x>
       <y>140</y>
       <width>151</width>
       <height>31</height>
@@ -107,7 +107,7 @@ background-color: rgb(170, 0, 0);</string>
    <widget class="QPushButton" name="Chatboard_but">
     <property name="geometry">
      <rect>
-      <x>650</x>
+      <x>720</x>
       <y>180</y>
       <width>151</width>
       <height>31</height>
@@ -162,9 +162,9 @@ background-color: rgb(170, 0, 0);</string>
    <widget class="QTableWidget" name="logtablewidget">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>270</x>
       <y>320</y>
-      <width>551</width>
+      <width>601</width>
       <height>201</height>
      </rect>
     </property>
@@ -175,7 +175,7 @@ background-color: rgb(170, 0, 0);</string>
    <widget class="QPushButton" name="filter_button">
     <property name="geometry">
      <rect>
-      <x>650</x>
+      <x>720</x>
       <y>260</y>
       <width>151</width>
       <height>31</height>
@@ -194,7 +194,7 @@ background-color: rgb(170, 0, 0);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>808</width>
+     <width>885</width>
      <height>18</height>
     </rect>
    </property>

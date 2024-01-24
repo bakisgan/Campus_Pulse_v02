@@ -267,9 +267,9 @@ class Login(QMainWindow):
 
                         if account_type == "Student":
                             stackedWidget.setCurrentIndex(3)
-                            student.load_attendance()
+                            # student.load_attendance()
                             # student.load_tasks()
-                            student.load_announcements()
+                            # student.load_announcements()
                             student.load_calendar_events()
                             student.show_tasks()
                             student.populate_table()
@@ -296,7 +296,7 @@ class Login(QMainWindow):
                             # teacher.pushButton_switchadmin.show()
                             stackedWidget.setCurrentIndex(5)
                             teacher.label_Name.setText(f"Welcome {user_data[3]} {user_data[4]}")
-                            # admin.fill_table()
+                            admin.fill_table()
                             teacher.fill_courses()
                             teacher.fill_students()
 
