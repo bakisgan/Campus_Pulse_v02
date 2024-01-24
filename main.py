@@ -685,19 +685,19 @@ class ContactAdmin(QMainWindow):
         self.TA_surname_LE.clear()
 
 
-class Teacher(QMainWindow):
-    def __init__(self):
-        super(Teacher, self).__init__()
-        loadUi('teacher_page.ui', self)
-        self.Chatboard_but.clicked.connect(self.switch_chatboard)
+# class Teacher(QMainWindow):
+#     def __init__(self):
+#         super(Teacher, self).__init__()
+#         loadUi('teacher_page.ui', self)
+#         self.Chatboard_but.clicked.connect(self.switch_chatboard)
 
         
-    def switch_loginform(self):
-        stackedWidget.setCurrentIndex(0)
+#     def switch_loginform(self):
+#         stackedWidget.setCurrentIndex(0)
     
-    def switch_chatboard(self):
-        stackedWidget.setCurrentIndex(6)
-        chatboard.fill_user_list2()
+#     def switch_chatboard(self):
+#         stackedWidget.setCurrentIndex(6)
+#         chatboard.fill_user_list2()
 
 class User_Profile(QMainWindow):
     def __init__(self):
@@ -725,7 +725,10 @@ class User_Profile(QMainWindow):
                         self.city_line.text(),
                         global_user_id
                     ))
-
+            cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Usertable', CURRENT_TIMESTAMP, 'User profile has been updated', 'Update')
+                """, (global_user_id,))
             conn.commit()
         except Exception as e:
             # Handle the exception (show error message, log, etc.)
@@ -1046,7 +1049,6 @@ class Admin(QMainWindow):
         # Clear the date selection in the logcalendarWidget
         self.logcalendarWidget.setDate(QDate(2024, 1, 1))
 
-    
 
     
 class Chatboard(QMainWindow):
@@ -1544,6 +1546,7 @@ class Main_Window(QMainWindow):
     def onCheckBoxStateChanged(self, state, row):
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
+        global global_user_id
         
 
         try:
@@ -1552,8 +1555,17 @@ class Main_Window(QMainWindow):
             task_show=cur.fetchall()
             if state == 2:  # Qt.Checked
                 cur.execute(f"UPDATE task SET status = TRUE WHERE task_id={task_show[row][0]}")
+                cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task is completed', 'Update')
+                """, (task_show[row][0],))
+
             else:
                 cur.execute(f"UPDATE task SET status = FALSE WHERE task_id={task_show[row][0]}")
+                cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task is undone', 'Update')
+                """, (global_user_id,))
 
             conn.commit()
 
@@ -1822,6 +1834,10 @@ class MyMainWindow(QMainWindow):
                 WHERE student_id = {student_id} AND lesson_id = '{lessonid}' AND planned_date = '{planneddate_str}';
             '''
             cur.execute(update_query)
+            cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Attendance has been updated', 'Update')
+                """, (student_id,))
             conn.commit()
 
         except Exception as e:
@@ -1929,7 +1945,10 @@ class MyMainWindow(QMainWindow):
             with conn.cursor() as cursor:
                 cursor.execute("UPDATE announcement SET deadline = %s, text = %s, teacher_id = %s, date = CURRENT_TIMESTAMP WHERE announcement_id = %s",
                             (new_date, new_text, teacher_id, selected_id))
-
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Attendance has been updated', 'Update')
+                """, (global_user_id,))
                 conn.commit()
 
             QMessageBox.information(self, "Success", "Announcement updated successfully!")
@@ -2120,6 +2139,10 @@ class MyMainWindow(QMainWindow):
                         INSERT INTO task (teacher_id, text, date, deadline, status, student_id)
                         VALUES (%s, %s, CURRENT_TIMESTAMP, %s, FALSE, %s)
                     """, (global_user_id, task_text, deadline, int(student_id)))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task has been created', 'Create')
+                """, (global_user_id,))
                 conn.commit()
 
             except Exception as e:
@@ -2139,6 +2162,7 @@ class MyMainWindow(QMainWindow):
     def edit_task(self):
         # Get the selected task text from comboBox_tasks
         selected_task_text = self.comboBox_tasks.currentText()
+        global global_user_id
 
         # Get the new task information from listWidget_AssignList_2, plainTextEdit_NewTask_2, and dateTimeEdit_Deadline_2
         new_assigned_students = [item.text().split(":")[0] for item in self.listWidget_AssignList_2.selectedItems()]
@@ -2178,6 +2202,10 @@ class MyMainWindow(QMainWindow):
                         INSERT INTO task (teacher_id, text, date, deadline, status, student_id)
                         VALUES (%s, %s, CURRENT_TIMESTAMP, %s, FALSE, %s)
                     """, (global_user_id, new_task_text, new_deadline, int(_)))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task has been edited', 'Update')
+                """, (global_user_id,))
 
                 conn.commit()
                 QMessageBox.information(self, "Success", "Task edited successfully!")
@@ -2200,6 +2228,7 @@ class MyMainWindow(QMainWindow):
     def delete_task(self):
         # Get the selected task text from comboBox_tasks
         selected_task_text = self.comboBox_tasks.currentText()
+        global global_user_id
 
         try:
             conn = psycopg2.connect(db_url)
@@ -2211,6 +2240,10 @@ class MyMainWindow(QMainWindow):
                 # Delete existing task records with the given text
                 for task_id in task_ids:
                     cursor.execute("DELETE FROM task WHERE task_id = %s", (task_id,))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task has been deleted', 'Delete')
+                """, (global_user_id,))
 
                 conn.commit()
                 QMessageBox.information(self, "Success", "Task deleted successfully!")
@@ -2402,6 +2435,10 @@ class MyMainWindow(QMainWindow):
                         INSERT INTO calendar (lesson_id, teacher_id, creation_date, planned_date, student_id, status)
                         VALUES (%s, %s, CURRENT_TIMESTAMP, %s, %s, FALSE)
                     """, (lesson_id, global_user_id, planned_date, student_id))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'A lesson plan has been added', 'Create')
+                """, (global_user_id,))
 
             conn.commit()
             self.populate_calendar_combobox()
@@ -2446,6 +2483,8 @@ class MyMainWindow(QMainWindow):
  
  
     def edit_lesson_plan(self):
+
+        global global_user_id
         
         selected_item_text = self.comboBox.currentText()
         if not selected_item_text:
@@ -2470,6 +2509,10 @@ class MyMainWindow(QMainWindow):
                     AND lesson_id = (SELECT lesson_id FROM lesson WHERE lesson_name = %s)
                     AND planned_date = %s
                 """, (teacher_name, lesson_name, planned_date))
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Lessonplan has been edited', 'Update')
+                """, (global_user_id,))
 
             conn.commit()
 
@@ -2509,6 +2552,7 @@ class MyMainWindow(QMainWindow):
             return None, None
 
     def edit_schedule(self):
+        global global_user_id
         selected_students = self.listWidget_studentlist_2.selectedItems()
         selected_course_item  = self.listWidget_coursemeet_2.currentItem()
         planned_date = self.dateTimeEdit_sch_2.dateTime().toString("yyyy-MM-dd hh:mm:ss")
@@ -2544,6 +2588,10 @@ class MyMainWindow(QMainWindow):
                         INSERT INTO calendar (lesson_id, teacher_id, creation_date, planned_date, student_id, status)
                         VALUES (%s, %s, CURRENT_TIMESTAMP, %s, %s, FALSE)
                     """, (lesson_id, teacher_id, planned_date, student_id))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Schedule has been edited', 'Edit')
+                """, (global_user_id,))
 
                 conn.commit()
                 QMessageBox.information(self, "Success", "Ders planları başarıyla kaydedildi.")
@@ -2582,6 +2630,11 @@ class MyMainWindow(QMainWindow):
                     AND lesson_id = (SELECT lesson_id FROM lesson WHERE lesson_name = %s)
                     AND planned_date = %s
                 """, (teacher_name, lesson_name, planned_date))
+
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Lesson has been deleted', 'Delete')
+                """, (global_user_id,))
 
             conn.commit()
             QMessageBox.warning(self, "Success", "Ders planlama başarıyla silindi.")
@@ -2661,6 +2714,7 @@ class TaskManager:
         
 
     def create_announcement(self, announcement_text, last_date):
+        global global_user_id
         try:
             conn = psycopg2.connect(db_url)
             # Veritabanına anonsu ekle
@@ -2671,6 +2725,10 @@ class TaskManager:
                     "INSERT INTO announcement (teacher_id, text, date, deadline) VALUES (%s, %s, %s, %s)",
                     (teacher_id, announcement_text, date_created, last_date)
                 )
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Announcement', CURRENT_TIMESTAMP, 'Announcement has been created', 'Create')
+                """, (global_user_id,))
             conn.commit()
 
         except Exception as e:
