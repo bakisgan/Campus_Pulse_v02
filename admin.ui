@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>808</width>
+    <width>885</width>
     <height>563</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
      <rect>
       <x>30</x>
       <y>10</y>
-      <width>751</width>
+      <width>821</width>
       <height>61</height>
      </rect>
     </property>
@@ -44,8 +44,8 @@
    <widget class="QPushButton" name="Back_Log_but">
     <property name="geometry">
      <rect>
-      <x>630</x>
-      <y>500</y>
+      <x>720</x>
+      <y>220</y>
       <width>151</width>
       <height>31</height>
      </rect>
@@ -62,7 +62,7 @@
      <rect>
       <x>30</x>
       <y>100</y>
-      <width>751</width>
+      <width>681</width>
       <height>192</height>
      </rect>
     </property>
@@ -73,8 +73,8 @@
    <widget class="QPushButton" name="Approve_but">
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>320</y>
+      <x>720</x>
+      <y>100</y>
       <width>151</width>
       <height>31</height>
      </rect>
@@ -90,8 +90,8 @@ background-color: rgb(0, 85, 0);</string>
    <widget class="QPushButton" name="Discard_but">
     <property name="geometry">
      <rect>
-      <x>630</x>
-      <y>320</y>
+      <x>720</x>
+      <y>140</y>
       <width>151</width>
       <height>31</height>
      </rect>
@@ -107,9 +107,9 @@ background-color: rgb(170, 0, 0);</string>
    <widget class="QPushButton" name="Chatboard_but">
     <property name="geometry">
      <rect>
-      <x>490</x>
-      <y>500</y>
-      <width>131</width>
+      <x>720</x>
+      <y>180</y>
+      <width>151</width>
       <height>31</height>
      </rect>
     </property>
@@ -120,30 +120,92 @@ background-color: rgb(170, 0, 0);</string>
      <string>Chatboard</string>
     </property>
    </widget>
-   <widget class="QTableWidget" name="courseWidget">
+   <widget class="QComboBox" name="Users_combo">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>20</x>
       <y>320</y>
-      <width>231</width>
-      <height>191</height>
+      <width>241</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(209, 209, 209);</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="Transaction_combo">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>350</y>
+      <width>241</width>
+      <height>22</height>
      </rect>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(209, 209, 209);</string>
     </property>
    </widget>
-   <widget class="QTextEdit" name="history_LE">
+   <widget class="QTableWidget" name="logtablewidget">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>270</x>
       <y>320</y>
-      <width>371</width>
+      <width>601</width>
       <height>201</height>
      </rect>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(209, 209, 209);</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="filter_button">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>260</y>
+      <width>151</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(167, 168, 167); font-size:12pt; color:rgb(255, 255, 255)</string>
+    </property>
+    <property name="text">
+     <string>Filter</string>
+    </property>
+   </widget>
+   <widget class="QDateTimeEdit" name="logcalendarWidget">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>380</y>
+      <width>241</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="toolTipDuration">
+     <number>0</number>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(209, 209, 209);</string>
+    </property>
+    <property name="date">
+     <date>
+      <year>2024</year>
+      <month>1</month>
+      <day>1</day>
+     </date>
+    </property>
+    <property name="calendarPopup">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
@@ -152,8 +214,8 @@ background-color: rgb(170, 0, 0);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>808</width>
-     <height>18</height>
+     <width>885</width>
+     <height>20</height>
     </rect>
    </property>
   </widget>

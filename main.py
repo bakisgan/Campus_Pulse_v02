@@ -1,9 +1,9 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDateTimeEdit, QStackedWidget, QMessageBox, QWidget, QTableWidget, QTableWidgetItem, QCheckBox, QLabel, QCalendarWidget, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout
-from PyQt5.QtCore import Qt, QTimer, QDate, QDateTime, QTime
+from PyQt5.QtCore import Qt, QTimer, QDate, QDateTime
 from PyQt5.uic import loadUi
-import json
+
 import re
 from datetime import datetime
 from PyQt5.QtGui import QColor
@@ -279,27 +279,26 @@ class Login(QMainWindow):
                             stackedWidget.setCurrentIndex(4)
                             # teacher.task_manager.load_data()
                             # teacher.populate_students_list()
-                            # teacher.populate_todo_list()
                             # teacher.populate_students_table()
-                            # teacher.populate_attendance_table()
-                            # teacher.populate_mentor_attendance_table()
+                            
                             # teacher.connect_table_signals() 
                             stackedWidget.setCurrentIndex(4)
                             # teacher.fill_courses()
-                            # teacher.pushButton_switchadmin.hide()
-                            teacher.label_Name.setText(f"Welcome {user_data[2]} {user_data[3]}")
+                            teacher.pushButton_switchadmin.hide()
+                            teacher.label_Name.setText(f"Welcome {user_data[3]} {user_data[4]}")
+                            teacher.fill_courses()
+                            teacher.fill_students()
 
                         elif account_type == "Admin":
                             # teacher.task_manager.load_data()
                             # teacher.populate_students_list()
-                            # teacher.populate_todo_list()
                             # teacher.populate_students_table()
-                            # teacher.populate_attendance_table()
-                            # teacher.populate_mentor_attendance_table()
                             # teacher.pushButton_switchadmin.show()
                             stackedWidget.setCurrentIndex(5)
-                            teacher.label_Name.setText(f"Welcome {user_data[2]} {user_data[3]}")
-                            # admin.fill_table()
+                            teacher.label_Name.setText(f"Welcome {user_data[3]} {user_data[4]}")
+                            admin.fill_table()
+                            teacher.fill_courses()
+                            teacher.fill_students()
 
                     else:
                         self.show_error_message("User not found.")
@@ -364,7 +363,7 @@ class Signup(QMainWindow):
 
         Retrieves user input, checks for existing email, password matching,
         and password strength. If all conditions are met, adds the new account
-        to the 'accounts.json' file and switches to the login form.
+        to usertable and switches to the login form.
         """
         email = self.signup_email_LE.text()
         plain_password = self.signup_password_LE.text()
@@ -588,7 +587,7 @@ class ContactAdmin(QMainWindow):
 
         Retrieves user input, checks for existing requests, existing accounts,
         password matching, and password strength. If all conditions are met,
-        adds the new TA account request to the 'TA_tobecreated.json' file.
+        adds the new TA account request to the application table.
         """
         email = self.TA_email_LE.text()
         plain_password = self.TA_password_LE.text()
@@ -686,19 +685,19 @@ class ContactAdmin(QMainWindow):
         self.TA_surname_LE.clear()
 
 
-class Teacher(QMainWindow):
-    def __init__(self):
-        super(Teacher, self).__init__()
-        loadUi('teacher_page.ui', self)
-        self.Chatboard_but.clicked.connect(self.switch_chatboard)
+# class Teacher(QMainWindow):
+#     def __init__(self):
+#         super(Teacher, self).__init__()
+#         loadUi('teacher_page.ui', self)
+#         self.Chatboard_but.clicked.connect(self.switch_chatboard)
 
         
-    def switch_loginform(self):
-        stackedWidget.setCurrentIndex(0)
+#     def switch_loginform(self):
+#         stackedWidget.setCurrentIndex(0)
     
-    def switch_chatboard(self):
-        stackedWidget.setCurrentIndex(6)
-        chatboard.fill_user_list2()
+#     def switch_chatboard(self):
+#         stackedWidget.setCurrentIndex(6)
+#         chatboard.fill_user_list2()
 
 class User_Profile(QMainWindow):
     def __init__(self):
@@ -726,7 +725,10 @@ class User_Profile(QMainWindow):
                         self.city_line.text(),
                         global_user_id
                     ))
-
+            cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Usertable', CURRENT_TIMESTAMP, 'User profile has been updated', 'Update')
+                """, (global_user_id,))
             conn.commit()
         except Exception as e:
             # Handle the exception (show error message, log, etc.)
@@ -802,6 +804,10 @@ class Admin(QMainWindow):
         self.tableWidget.setColumnWidth(2,150)
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setHorizontalHeaderLabels([ "Select", "Email", "Name", "Surname"])
+        self.populate_user_combobox()
+        self.populate_transaction_combobox()
+        self.filter_button.clicked.connect(self.fill_logdata)
+
         self.fill_table()
 
 
@@ -932,6 +938,118 @@ class Admin(QMainWindow):
     def switch_chatboard(self):
         stackedWidget.setCurrentIndex(6)
         chatboard.fill_user_list2()
+
+    def populate_user_combobox(self):
+            # Populate the combo box with user emails from usertable
+            global db_url
+            try:
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                cur.execute("SELECT email FROM usertable;")
+                user_emails = cur.fetchall()
+                self.Users_combo.addItem("None")
+                for email in user_emails:
+                    self.Users_combo.addItem(email[0])
+            except Exception as e:
+                print(f"Error populating user combo box: {e}")
+            finally:
+                cur.close()
+                conn.close()
+    
+    def populate_transaction_combobox(self):
+            # Populate the combo box with user emails from usertable
+            global db_url
+            try:
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                cur.execute("SELECT DISTINCT event_type FROM logtable;")
+                transactions = cur.fetchall()
+                self.Transaction_combo.addItem("None")
+                for transaction in transactions:
+                    self.Transaction_combo.addItem(transaction[0])
+            except Exception as e:
+                print(f"Error populating user combo box: {e}")
+            finally:
+                cur.close()
+                conn.close()
+    
+    def fill_logdata(self):
+        """
+        Fills the table with log data
+        """
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            selected_email = self.Users_combo.currentText()
+            cur.execute("SELECT user_id FROM usertable WHERE email = %s", (selected_email,))
+            selected_user = cur.fetchone()[0] if cur.rowcount > 0 else None
+
+            selected_transaction = self.Transaction_combo.currentText()
+            selected_date = self.logcalendarWidget.date().toString(Qt.ISODate)
+
+            conditions = []
+
+            if selected_user:
+                conditions.append(f"logtable.user_id = '{selected_user}'")
+
+            if selected_transaction != "None":
+                conditions.append(f"logtable.event_type = '{selected_transaction}'")
+
+            if selected_date != "2024-01-01":
+                conditions.append(f"DATE(logtable.time_stamp) = '{selected_date}'")
+
+            # Construct the SQL query
+            where_clause = " AND ".join(conditions)
+            query = f"""
+                SELECT usertable.first_name, usertable.last_name, logtable.event_type, logtable.time_stamp, logtable.action, logtable.type
+                FROM logtable
+                LEFT JOIN usertable ON logtable.user_id = usertable.user_id
+                {"WHERE" if conditions else ""}
+                {where_clause};
+            """
+
+            cur.execute(query)
+            log_records = cur.fetchall()
+            number_of_records = len(log_records)
+
+            self.logtablewidget.setColumnCount(5)
+            self.logtablewidget.setHorizontalHeaderLabels(["Name", "Event", "Date", "Action", "Type"])
+            self.logtablewidget.setColumnWidth(0, 150)
+            self.logtablewidget.setColumnWidth(1, 150)
+            self.logtablewidget.setColumnWidth(2, 150)
+            self.logtablewidget.setColumnWidth(3, 150)
+            self.logtablewidget.setColumnWidth(4, 150)
+
+            self.logtablewidget.setRowCount(number_of_records)
+
+            row = 0
+            for i in range(number_of_records):
+                name = log_records[i][0] + " " + log_records[i][1]
+                event = log_records[i][2]
+                date = str(log_records[i][3])
+                action = log_records[i][4]
+                tip = log_records[i][5]
+
+                self.logtablewidget.setItem(row, 0, QTableWidgetItem(name))
+                self.logtablewidget.setItem(row, 1, QTableWidgetItem(event))
+                self.logtablewidget.setItem(row, 2, QTableWidgetItem(date))
+                self.logtablewidget.setItem(row, 3, QTableWidgetItem(action))
+                self.logtablewidget.setItem(row, 4, QTableWidgetItem(tip))
+
+                row += 1
+
+        except Exception as e:
+            print(f"Error loading data: {e}")
+        finally:
+            cur.close()
+            conn.close()
+
+        # Clear the date selection in the logcalendarWidget
+        self.logcalendarWidget.setDate(QDate(2024, 1, 1))
+
+
     
 class Chatboard(QMainWindow):
     """
@@ -964,7 +1082,7 @@ class Chatboard(QMainWindow):
         self.history_LE.setReadOnly(True)
         # Connect Enter key press event to send_message method
         self.send_TE.installEventFilter(self)
-        self.fill_courses()
+        
 
 
     def fill_user_list2(self):
@@ -1187,53 +1305,7 @@ class Chatboard(QMainWindow):
         chatboard.fill_user_list2()
 
 
-    def fill_courses(self):
-        """
-        Fills the courses with course/mentor name and dates.
-        """
-        global db_url
-        print("fill courses çalıştırıldı")
 
-        try:
-            conn = psycopg2.connect(db_url)
-            cur = conn.cursor()
-
-             # Fetch the number of distinct planned courses
-            
-            cur.execute("select count (distinct planned_date) from calendar;")
-            number_of_planned_courses = cur.fetchone()[0]
-
-            courses_query= f"""
-            select DISTINCT planned_date, lesson_name from calendar
-            left join lesson
-            on calendar.lesson_id=lesson.lesson_id
-            order by planned_date
-            """
-            cur.execute(courses_query)
-            course_data = cur.fetchall()
-
-            row=0
-
-            self.courseWidget.setRowCount(number_of_planned_courses)  # Set the row count
-
-            for i in course_data:
-                print(i[0]," - ", i[1])
-
-
-                self.courseWidget.setItem(row,0,QTableWidgetItem(i[0]))
-                self.courseWidget.setItem(row,1, QTableWidgetItem(i[1]))
-
-                self.courseWidget.setColumnWidth(0, 150)
-                self.courseWidget.setColumnWidth(1, 150)
-                row += 1
-
-        except Exception as e:
-            # Rollback the transaction in case of an error
-            conn.rollback()
-            print(f"Error: {str(e)}")
-        finally:
-            cur.close()
-            conn.close()    
 
 
 class Main_Window(QMainWindow):
@@ -1276,24 +1348,18 @@ class Main_Window(QMainWindow):
                         self.calendar.setDateTextFormat(date, self.get_calendar_event_format2())
             
                 selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
-                
-                # cur.execute(f"SELECT lesson_id, planned_date FROM calendar where planned_date = '{selected_date}'")
-                # cur.execute(f"SELECT * FROM your_table WHERE date_trunc('day', planned_date)::date = %s;")
-                sql = "SELECT lesson_id, planned_date FROM calendar WHERE date_trunc('day', planned_date)::date = %s;"
-                cur.execute(sql, (datetime.strptime(selected_date, "%Y-%m-%d").date(),))
-
-                lesson_show=cur.fetchall()
-                if lesson_show == []:
+                cur.execute(f"SELECT lesson_id FROM calendar where planned_date = '{selected_date}'")
+                lesson_show=cur.fetchone()
+                if lesson_show == None:
                     self.note_edit.clear() 
                 else:   
-                    cur.execute(f"SELECT lesson_name FROM lesson where lesson_id = '{lesson_show[0][0]}'")
+                    cur.execute(f"SELECT lesson_name FROM lesson where lesson_id = '{lesson_show[0]}'")
                     nameles = cur.fetchone()
                     # selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
               
                     les=nameles[0]
-                    time=lesson_show[0][1].strftime("%H:%M")
-                    text=f"Event: {les}, Time:{time}"
-                    self.note_edit.setText(text)
+                    # print(les)
+                    self.note_edit.setText(str(les))
                 
             else:
                 pass
@@ -1480,6 +1546,7 @@ class Main_Window(QMainWindow):
     def onCheckBoxStateChanged(self, state, row):
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
+        global global_user_id
         
 
         try:
@@ -1488,8 +1555,17 @@ class Main_Window(QMainWindow):
             task_show=cur.fetchall()
             if state == 2:  # Qt.Checked
                 cur.execute(f"UPDATE task SET status = TRUE WHERE task_id={task_show[row][0]}")
+                cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task is completed', 'Update')
+                """, (task_show[row][0],))
+
             else:
                 cur.execute(f"UPDATE task SET status = FALSE WHERE task_id={task_show[row][0]}")
+                cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task is undone', 'Update')
+                """, (global_user_id,))
 
             conn.commit()
 
@@ -1500,16 +1576,6 @@ class Main_Window(QMainWindow):
             # Close the cursor and connection
             cur.close()
             conn.close()
-
-
-
-# if checkbox.isChecked():
-#                     cur.execute("UPDATE application SET status = FALSE WHERE email = %s",(email_key,))
-#                     cur.execute("""
-#                     INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
-#                     VALUES (%s, 'Application', CURRENT_TIMESTAMP, 'Teacher Account is not approved', 'Update')
-#                 """, (global_user_id,))
-#             conn.commit()
 
 
 # announcements  
@@ -1580,16 +1646,22 @@ class MyMainWindow(QMainWindow):
         self.setWindowTitle('Campus Pulse')
         self.task_manager = TaskManager()
         self.pushButton_LessonSave.clicked.connect(self.save_lesson)
-        self.announcements = []
+        self.announcements = self.fetch_announcements_from_database() 
+        self.announcement_index = 0
         self.populate_students_list()
-        self.populate_todo_list()
         self.populate_students_table()
-        self.populate_attendance_table()
-        self.populate_mentor_attendance_table()
-        self.connect_table_signals() 
         self.populate_task_combobox()
-        
-    
+        self.display_upcoming_tasks()
+        self.populate_coursemeet_list()
+        self.populate_announcements()
+        self.populate_calendar_combobox()
+        self.update_announcements()
+        self.pushButton_SchSave.clicked.connect(self.save_schedule)
+        self.pushButton_EditLesson.clicked.connect(self.edit_lesson_plan)
+        self.pushButton_DeleteLesson.clicked.connect(self.delete_selected_lesson)
+        self.pushButton_edit_announcement.clicked.connect(self.edit_announcement)
+        self.pushButton_DeleteAnnouncement_6.clicked.connect(self.delete_announcement)
+        self.comboBox_announcement.currentIndexChanged.connect(self.display_selected_announcement)
         self.pushButton_chatbox.clicked.connect(student.switch_chatboard)
         self.pushButton_profile.clicked.connect(student.switch_userprofile)
         self.pushButton_backtologin.clicked.connect(student.switch_login)
@@ -1601,15 +1673,14 @@ class MyMainWindow(QMainWindow):
         self.courseWidget.itemSelectionChanged.connect(self.fill_students)
         self.comboBox_tasks.currentIndexChanged.connect(self.onComboBoxIndexChanged)
 
-        self.pushButton_SchSave.clicked.connect(self.save_attendance)
         
         self.tableWidget_Students.setColumnWidth(0,150)
         self.tableWidget_Students.setColumnWidth(1,250)
         self.tableWidget_Students.setColumnWidth(2,335)
 
-        self.tableWidget_ToDoList.setColumnWidth(0, 50)  # 0. sütunun genişliği
-        self.tableWidget_ToDoList.setColumnWidth(1, 635)  # 1. sütunun genişliği
-        self.tableWidget_ToDoList.setColumnWidth(2, 150)
+        self.tableWidget_ToDoList.setColumnWidth(0, 100)  # 0. sütunun genişliği
+        self.tableWidget_ToDoList.setColumnWidth(1, 100)  # 1. sütunun genişliği
+        self.tableWidget_ToDoList.setColumnWidth(2, 200)
         #self.gecici.clicked.connect(self.fill_courses)
         
         # Create Task butonuna tıklandığında
@@ -1626,6 +1697,155 @@ class MyMainWindow(QMainWindow):
         self.update_announcements()  # Başlangıçta da çalıştır
         self.textEdit_AnnouncementView.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
 
+    def fill_courses(self):
+        """
+        Fills the courses with course/mentor name and dates.
+        """
+        global db_url
+
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+             # Fetch the number of distinct planned courses
+            
+            cur.execute("select count (distinct planned_date) from calendar;")
+            number_of_planned_courses = cur.fetchone()[0]
+
+            courses_query= f"""
+            select DISTINCT planned_date, lesson_name from calendar
+            left join lesson
+            on calendar.lesson_id=lesson.lesson_id
+            order by planned_date
+            """
+            cur.execute(courses_query)
+            course_data = cur.fetchall()
+
+            row=0
+
+            self.courseWidget.setRowCount(number_of_planned_courses)  # Set the row count
+            self.courseWidget.setColumnCount(2)
+            self.courseWidget.setHorizontalHeaderLabels([ "Date", "Name"])
+            self.courseWidget.setColumnWidth(0, 150)
+            self.courseWidget.setColumnWidth(1, 150)
+
+            for i in course_data:
+
+                self.courseWidget.setItem(row, 0, QTableWidgetItem(i[0].strftime('%Y-%m-%d %H:%M:%S')))
+                self.courseWidget.setItem(row, 1, QTableWidgetItem(str(i[1])))
+
+
+                self.courseWidget.setColumnWidth(0, 120)
+                self.courseWidget.setColumnWidth(1, 120)
+                row += 1
+
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()    
+    
+    def fill_students(self):
+        """
+        Fills the table with assigned students.
+        """
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            # Fetch the count of pending accounts
+            selected_items = self.courseWidget.selectedItems()
+            if not selected_items:
+                return
+            selected_row=selected_items[0].row()
+            lessondate=self.courseWidget.item(selected_row,0).text()
+            lessonname=self.courseWidget.item(selected_row,1).text()
+          
+
+            # lessondate = '2024-01-25 00:00:00'
+            # lessonname = 'Mathematics'
+
+            self.studentWidget.setColumnCount(2)
+            self.studentWidget.setHorizontalHeaderLabels(["Attendance", "Name"])
+            self.studentWidget.setColumnWidth(0, 100)
+            self.studentWidget.setColumnWidth(1, 300)
+
+            # Fetch number of students assigned to the lesson
+            query1 = f'''SELECT COUNT(student_id) FROM calendar
+                        LEFT JOIN lesson ON calendar.lesson_id = lesson.lesson_id
+                        WHERE planned_date = '{lessondate}' AND lesson_name = '{lessonname}';
+                    '''
+            cur.execute(query1)
+            number_of_students = cur.fetchone()[0]
+
+            row = 0
+            self.studentWidget.setRowCount(number_of_students)
+
+            # Fetch data of students assigned to the lesson
+            query2 = f'''SELECT calendar.student_id, calendar.status, usertable.first_name, usertable.last_name, calendar.lesson_id
+                        FROM calendar
+                        LEFT JOIN lesson ON calendar.lesson_id = lesson.lesson_id
+                        LEFT JOIN usertable ON calendar.student_id = usertable.user_id
+                        WHERE calendar.planned_date = '{lessondate}' AND lesson.lesson_name = '{lessonname}';
+                    '''
+
+            # Fetch the data for students
+            cur.execute(query2)
+            student_data = cur.fetchall()
+
+            for i in range(number_of_students):
+                checkbox = QCheckBox()
+                studentid = student_data[i][0]
+                attendance_status = student_data[i][1]
+                firstname = student_data[i][2]
+                lastname = student_data[i][3]
+                lessonid=student_data[i][4]
+                checkbox.setChecked(attendance_status)
+                # Connect the stateChanged signal of the checkbox to the update_calendar_status method
+                checkbox.stateChanged.connect(lambda state, sid=studentid: self.update_calendar_status(sid, lessonid, lessondate, state == Qt.Checked))
+
+                self.studentWidget.setCellWidget(row, 0, checkbox)
+                self.studentWidget.setItem(row, 1, QTableWidgetItem(f"{firstname} {lastname}"))
+                row += 1
+        except Exception as e:
+            print(f"Error loading data: {e}")
+        finally:
+            cur.close()
+            conn.close()
+
+    def update_calendar_status(self, student_id, lessonid, planneddate, new_status):
+        """
+        Update the status in the calendar database.
+        """
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            # Convert planneddate to string and enclose it in single quotes
+            planneddate_str = str(planneddate)
+
+            # Update the status in the calendar table
+            update_query = f'''
+                UPDATE calendar
+                SET status = {new_status}
+                WHERE student_id = {student_id} AND lesson_id = '{lessonid}' AND planned_date = '{planneddate_str}';
+            '''
+            cur.execute(update_query)
+            cur.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Attendance has been updated', 'Update')
+                """, (student_id,))
+            conn.commit()
+
+        except Exception as e:
+            print(f"Error updating calendar status: {e}")
+        finally:
+            cur.close()
+            conn.close()
 
     def populate_coursemeet_list(self):
         # Ders adlarını çek
@@ -1634,6 +1854,7 @@ class MyMainWindow(QMainWindow):
         # ListWidget'ı doldur
         self.listWidget_coursemeet.clear()
         self.listWidget_coursemeet.addItems(lessons)
+        self.listWidget_coursemeet_2.addItems(lessons)
         
         
     def fetch_announcements_from_database(self):
@@ -1659,6 +1880,7 @@ class MyMainWindow(QMainWindow):
         return announcements
 
     def update_announcements_from_database(self):
+        
         # Anonsları güncelle
         if self.announcement_index < len(self.announcements):
             announcement = self.announcements[self.announcement_index]
@@ -1672,6 +1894,91 @@ class MyMainWindow(QMainWindow):
             # Bir sonraki anonsa geç
             self.announcement_index += 1
         else:
+            # Anons listesinin sonuna gelindiğinde başa dön
+            self.announcement_index = 0
+
+    def populate_announcements(self):
+        try:
+            # Bugünün tarihini al
+            current_date = QDate.currentDate()
+            conn=psycopg2.connect(db_url)
+            # announcement_id'leri ve announcement_text'leri çek (deadline bugünden büyük olanlar)
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT announcement_id, text FROM announcement WHERE deadline >= %s", (current_date.toString("yyyy-MM-dd"),))
+                announcements = cursor.fetchall()
+
+            # comboBox_announcement'ı doldur
+            self.comboBox_announcement.clear()  # Combobox'ı temizle
+            for announcement_id, text in announcements:
+                self.comboBox_announcement.addItem(f"{announcement_id}: {text}")
+
+        except Exception as e:
+            print(f"Hata: announcement_id'leri ve announcement_text'leri çekerken bir sorun oluştu. Hata: {e}")
+        # Seçilen announcement'ın text'ini göstermek için
+
+
+    def display_selected_announcement(self):
+        selected_text = self.comboBox_announcement.currentText()
+        announcement_text = selected_text.split(": ")[1]
+        self.textEdit_announcementtext_5.setPlainText(announcement_text)
+
+    # Announcement'ı düzenlemek için
+    def edit_announcement(self):
+        new_date = self.dateEdit_lastdateofannouncement_5.date().toString("yyyy-MM-dd")
+        new_text = self.textEdit_announcementtext_5.toPlainText()
+        selected_id = int(self.comboBox_announcement.currentText().split(": ")[0])
+        teacher_id = global_user_id
+        current_date = QDate.currentDate().toString("yyyy-MM-dd")
+
+        # Tarih seçimini kontrol et
+        if QDate.fromString(new_date, "yyyy-MM-dd") < QDate.currentDate():
+            QMessageBox.warning(self, "Warning", "Selected date cannot be before the current date.")
+            return
+
+        # new_text alanını kontrol et
+        if not new_text.strip():
+            QMessageBox.warning(self, "Warning", "Please enter a new announcement text.")
+            return
+
+        try:
+            conn = psycopg2.connect(db_url)
+            # announcement'ı güncelle
+            with conn.cursor() as cursor:
+                cursor.execute("UPDATE announcement SET deadline = %s, text = %s, teacher_id = %s, date = CURRENT_TIMESTAMP WHERE announcement_id = %s",
+                            (new_date, new_text, teacher_id, selected_id))
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Attendance has been updated', 'Update')
+                """, (global_user_id,))
+                conn.commit()
+
+            QMessageBox.information(self, "Success", "Announcement updated successfully!")
+
+        except Exception as e:
+            print(f"Hata: announcement güncellenirken bir sorun oluştu. Hata: {e}")
+
+    # Announcement'ı silmek için
+    def delete_announcement(self):
+        selected_id = int(self.comboBox_announcement.currentText().split(": ")[0])
+
+        try:
+            conn = psycopg2.connect(db_url)
+            # announcement'ı sil
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM announcement WHERE announcement_id = %s", (selected_id,))
+                conn.commit()
+            
+
+                # comboBox_announcement'ı güncelle (silinen kaydı kaldır)
+                self.comboBox_announcement.removeItem(self.comboBox_announcement.currentIndex())
+
+                # Silme işlemi tamamlandıktan sonra text alanlarını temizle
+                self.textEdit_announcementtext_5.clear()
+                self.dateEdit_lastdateofannouncement_5.clear()
+            QMessageBox.information(self, "Success", "Announcement deleted successfully!")
+
+        except Exception as e:
+            print(f"Hata: announcement silinirken bir sorun oluştu. Hata: {e}")
             # Anons listesinin sonuna gelindiğinde başa dön
             self.announcement_index = 0
 
@@ -1712,7 +2019,9 @@ class MyMainWindow(QMainWindow):
 
         finally:
             # Bağlantıyı kapat
-            connection.close()
+            if connection:
+                connection.close()
+
 
     def insert_lesson_to_database(self, lesson_name):
         try:
@@ -1737,120 +2046,22 @@ class MyMainWindow(QMainWindow):
         stackedWidget.setCurrentIndex(6)
     
     def switch_to_admin(self):
-        email=login.email_LE.text()
-        with open('accounts.json', 'r') as f:
-            self.accounts_data = json.load(f)
-            if self.accounts_data[email]["Account_Type"]=="Admin":
-                stackedWidget.setCurrentIndex(5)
-            else:
-                pass
+
+        stackedWidget.setCurrentIndex(5)
 
             
-    def populate_attendance_table(self):
-        # Get students and dates from your data
-        students = self.task_manager.get_students()
-        dates = self.get_distinct_dates_from_attendance()
-        # print("Tarihler:", dates)
-        
-        # Set the row and column counts
-        self.tableWidget_cattendencetable.setRowCount(len(students) + 1)  # +1 for the header row
-        self.tableWidget_cattendencetable.setColumnCount(len(dates) + 3)  # +1 for the student names column
-        self.tableWidget_cattendencetable.horizontalHeader().setVisible(True)
 
-        # Set the headers
-        headers = ["Name","Surname","Email"] + dates
-        # print("Başlıklar:", headers)
-
-        self.tableWidget_cattendencetable.setHorizontalHeaderLabels(headers)
-
-        # Populate the table with data
-        for row, student in enumerate(students):
-            # Set the student name
-            name = student.get("name", "")
-            surname = student.get("surname", "")
-            email = student.get("Email", "")
-            self.tableWidget_cattendencetable.setItem(row, 0, QTableWidgetItem(name))
-            self.tableWidget_cattendencetable.setItem(row, 1, QTableWidgetItem(surname))
-            self.tableWidget_cattendencetable.setItem(row, 2, QTableWidgetItem(email))
-
-            # Set attendance for each date
-            for col, date in enumerate(dates):
-                email = student['Email']
-                status = self.get_attendance_status(email, date, "Data Science")
-                self.tableWidget_cattendencetable.setItem(row, col + 3, QTableWidgetItem(status))
-            
-
-    def populate_mentor_attendance_table(self):
-            # Get students with account type 'Student' from accounts.json
-            students = [data for data in self.task_manager.accounts_data.values() if data.get("Account_Type") == "Student"]
-
-            # Get distinct dates from Mentor Meeting attendance in attendance.json
-            dates = self.get_distinct_dates_from_mentor_attendance()
-            # print("Tarihler:", dates)
-            # Set the row and column counts
-            self.tableWidget_mattendencetable.setRowCount(len(students))
-            self.tableWidget_mattendencetable.setColumnCount(len(dates) + 3)  # +3 for Name, Surname, Email columns
-            self.tableWidget_mattendencetable.horizontalHeader().setVisible(True)
-
-            # Set the headers
-            headers = ["Name", "Surname", "Email"] + dates
-            # print("Başlıklar:", headers)
-
-            self.tableWidget_mattendencetable.setHorizontalHeaderLabels(headers)
-
-            # Populate the table with data
-            for row, student in enumerate(students):
-                name = student.get("name", "")
-                surname = student.get("surname", "")
-                email = student.get("Email", "")
-
-                # Set the Name, Surname, and Email columns
-                self.tableWidget_mattendencetable.setItem(row, 0, QTableWidgetItem(name))
-                self.tableWidget_mattendencetable.setItem(row, 1, QTableWidgetItem(surname))
-                self.tableWidget_mattendencetable.setItem(row, 2, QTableWidgetItem(email))
-
-                # Set attendance for each date
-                for col, date in enumerate(dates):
-                    status = self.get_attendance_status(email, date, "Mentor Meeting")
-                    self.tableWidget_mattendencetable.setItem(row, col + 3, QTableWidgetItem(status))
-
-
-    def get_distinct_dates_from_attendance(self):
-        # Get distinct dates from attendance_data
-        all_dates = []
-        for student_attendance in self.task_manager.attendance_data.values():
-            for course_dates in student_attendance.values():
-                all_dates.extend(course_dates.keys())
-        sorted_dates = sorted(set(all_dates))
-        return sorted_dates
-
-    def get_attendance_status(self, email, date, meeting_type):
-            # Get attendance status for the given email, date, and meeting type
-            if email in self.task_manager.attendance_data:
-                if meeting_type in self.task_manager.attendance_data[email]:
-                    if date in self.task_manager.attendance_data[email][meeting_type]:
-                        return self.task_manager.attendance_data[email][meeting_type][date]
-
-            return "-"
-
-
-
-    def get_distinct_dates_from_mentor_attendance(self):
-        # Get distinct dates from Mentor Meeting attendance in attendence.json
-        all_dates = []
-        for student_attendance in self.task_manager.attendance_data.values():
-            if "Mentor Meeting" in student_attendance:
-                all_dates.extend(student_attendance["Mentor Meeting"].keys())
-
-        return list(set(all_dates))
                  
     def update_announcements(self):
+        
+        self.textEdit_announcementtext.setToolTip("\n".join(str(announcement.get("content", "")) for announcement in self.announcements))
+        
         # Anonsları güncelle
         if self.announcement_index < len(self.announcements):
             announcement = self.announcements[self.announcement_index]
             last_date = announcement.get("last_date")
             current_date = datetime.now().strftime("%Y-%m-%d")
-            if last_date >= current_date:
+            if last_date and last_date >= current_date:
                 self.textEdit_AnnouncementView.clear()
                 self.textEdit_AnnouncementView.append(
                     f"📢❗🚨   {announcement['content']}   🚨❗📢")
@@ -1872,7 +2083,7 @@ class MyMainWindow(QMainWindow):
             self.listWidget_AssignList.addItem(f"{id}: {name} {surname}")
             self.listWidget_studentlist.addItem(f"{id}: {name} {surname}")   
             self.listWidget_AssignList_2.addItem(f"{id}: {name} {surname}")
-
+            self.listWidget_studentlist_2.addItem(f"{id}: {name} {surname}")   
 
     def populate_task_combobox(self):
         try:
@@ -1899,6 +2110,11 @@ class MyMainWindow(QMainWindow):
     def create_task(self):
         # Yeni görev oluştur
         task_text = self.plainTextEdit_NewTask.toPlainText()
+        
+        # plainTextEdit_NewTask alanını kontrol et
+        if not task_text.strip():  # Boşluksuz bir metin kontrolü yapılıyor
+            QMessageBox.warning(self, "Warning", "Please enter a task text.")
+            return
 
         deadlinecontrol = self.dateTimeEdit_Deadline.date()
         if deadlinecontrol < QDate.currentDate():
@@ -1938,8 +2154,7 @@ class MyMainWindow(QMainWindow):
         # Görev oluşturulduktan sonra formu temizle
         self.plainTextEdit_NewTask.clear()
         self.dateTimeEdit_Deadline.clear()
-        self.populate_todo_list()
-        self.update_table()
+
         self.populate_task_combobox()
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()
@@ -1961,6 +2176,7 @@ class MyMainWindow(QMainWindow):
     def edit_task(self):
         # Get the selected task text from comboBox_tasks
         selected_task_text = self.comboBox_tasks.currentText()
+        global global_user_id
 
         # Get the new task information from listWidget_AssignList_2, plainTextEdit_NewTask_2, and dateTimeEdit_Deadline_2
         new_assigned_students = [item.text().split(":")[0] for item in self.listWidget_AssignList_2.selectedItems()]
@@ -1971,6 +2187,11 @@ class MyMainWindow(QMainWindow):
         # self.logcalendarWidget.setDate(QDate(2024, 1, 1))
 
         new_task_text = self.plainTextEdit_NewTask_2.toPlainText()
+        
+        # plainTextEdit_NewTask_2 alanını kontrol et
+        if not new_task_text.strip():  # Boşluksuz bir metin kontrolü yapılıyor
+            QMessageBox.warning(self, "Warning", "Please enter a new task text.")
+            return
 
         new_deadline_control = self.dateTimeEdit_Deadline_2.date()
         if new_deadline_control < QDate.currentDate():
@@ -1995,6 +2216,10 @@ class MyMainWindow(QMainWindow):
                         INSERT INTO task (teacher_id, text, date, deadline, status, student_id)
                         VALUES (%s, %s, CURRENT_TIMESTAMP, %s, FALSE, %s)
                     """, (global_user_id, new_task_text, new_deadline, int(_)))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task has been edited', 'Update')
+                """, (global_user_id,))
 
                 conn.commit()
                 QMessageBox.information(self, "Success", "Task edited successfully!")
@@ -2009,8 +2234,6 @@ class MyMainWindow(QMainWindow):
             
         self.plainTextEdit_NewTask.clear()
         self.dateTimeEdit_Deadline.clear()
-        self.populate_todo_list()
-        self.update_table()
         self.populate_task_combobox()
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()        
@@ -2019,6 +2242,7 @@ class MyMainWindow(QMainWindow):
     def delete_task(self):
         # Get the selected task text from comboBox_tasks
         selected_task_text = self.comboBox_tasks.currentText()
+        global global_user_id
 
         try:
             conn = psycopg2.connect(db_url)
@@ -2030,6 +2254,10 @@ class MyMainWindow(QMainWindow):
                 # Delete existing task records with the given text
                 for task_id in task_ids:
                     cursor.execute("DELETE FROM task WHERE task_id = %s", (task_id,))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task has been deleted', 'Delete')
+                """, (global_user_id,))
 
                 conn.commit()
                 QMessageBox.information(self, "Success", "Task deleted successfully!")
@@ -2043,8 +2271,6 @@ class MyMainWindow(QMainWindow):
         # Refresh the combobox after deleting the task
         self.plainTextEdit_NewTask.clear()
         self.dateTimeEdit_Deadline.clear()
-        self.populate_todo_list()
-        self.update_table()
         self.populate_task_combobox()
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()
@@ -2077,19 +2303,43 @@ class MyMainWindow(QMainWindow):
             print(f"Hata: Anons gönderilirken bir sorun oluştu. Hata: {e}")
 
 
-    def populate_todo_list(self):
-        
-        self.tableWidget_ToDoList.setRowCount(0)  # Önceki verileri temizle
+    def display_upcoming_tasks(self):
+        try:
+            conn = psycopg2.connect(db_url)
 
-        tasks = self.task_manager.get_all_tasks()
+            today = datetime.now().date()
 
-        for task in tasks:
-            row_position = self.tableWidget_ToDoList.rowCount()
-            self.tableWidget_ToDoList.insertRow(row_position)
+            # Bugünden sonraki tarihli görevleri çek
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT DISTINCT ON (task.text) task.text, task.deadline, usertable.first_name, usertable.last_name
+                    FROM task
+                    INNER JOIN usertable ON task.teacher_id = usertable.user_id
+                    WHERE task.deadline > %s
+                    ORDER BY task.text, task.deadline
+                """, (today,))
 
-            self.tableWidget_ToDoList.setItem(row_position, 0, QTableWidgetItem(str(task["id"])))
-            self.tableWidget_ToDoList.setItem(row_position, 1, QTableWidgetItem(task["task"]))
-            self.tableWidget_ToDoList.setItem(row_position, 2, QTableWidgetItem(task["deadline"]))
+                result = cursor.fetchall()
+
+            # Tabloyu güncelle
+            self.tableWidget_ToDoList.setRowCount(len(result))
+
+            for row, task in enumerate(result):
+                text, deadline, teacher_first_name, teacher_last_name = task
+
+                # Satırı eklemek için rowCount kullanmamıza gerek yok
+                self.tableWidget_ToDoList.insertRow(row)
+
+                self.tableWidget_ToDoList.setItem(row, 0, QTableWidgetItem(text))
+                self.tableWidget_ToDoList.setItem(row, 1, QTableWidgetItem(str(deadline)))
+                self.tableWidget_ToDoList.setItem(row, 2, QTableWidgetItem(f"{teacher_first_name} {teacher_last_name}"))
+
+        except Exception as e:
+            print(f"Hata: Görev bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+        finally:
+            if conn:
+                conn.close()
+
 
     def populate_students_table(self):
         # Students tablosunu güncelle
@@ -2170,193 +2420,261 @@ class MyMainWindow(QMainWindow):
 
         return tasks    
 
-    def save_attendance(self):
-        # PushButton_SchSave butonuna tıklandığında çalışacak işlemler
-        selected_items = self.listWidget_studentlist.selectedItems()
 
-        if not selected_items:
-            QMessageBox.warning(self, "Warning", "Please select at least one student.")
-            return
-
-        selected_date1 = self.dateTimeEdit_sch.date()
-        if  selected_date1 < QDate.currentDate():
-            QMessageBox.warning(self, "Warning", "Selected date can not be before the current date.")
-            return        
-        selected_date=selected_date1.toString("yyyy-MM-dd")
+    def save_schedule(self):
+        selected_students = [item.text().split(":")[0] for item in self.listWidget_studentlist.selectedItems()]
         
-        selected_item = self.listWidget_coursemeet.currentItem()
-        if not selected_item or not selected_item.text():
-            QMessageBox.warning(self, "Warning", "Please select at least one Schedule Type.")
+        # Kontrol ekleniyor
+        selected_lesson_item = self.listWidget_coursemeet.currentItem()
+        if selected_lesson_item is None:
+            QMessageBox.warning(self, "Warning", "Lütfen bir ders seçin.")
             return
 
-        selected_course = selected_item.text()
+        selected_lesson_name = selected_lesson_item.text()
+        planned_date = self.dateTimeEdit_sch.dateTime().toString("yyyy-MM-dd hh:mm:ss")
 
-        for item in selected_items:
-            student_info = item.text().split("(")
-            student_email = student_info[-1].split(")")[0]
-
-            if student_email in self.task_manager.attendance_data:
-                if selected_course not in self.task_manager.attendance_data[student_email]:
-                    self.task_manager.attendance_data[student_email][selected_course] = {}
-
-                self.task_manager.attendance_data[student_email][selected_course][selected_date] = "Not Attended"
-            else:
-                self.task_manager.attendance_data[student_email] = {
-                    selected_course: {selected_date: "Not Attended"}
-                }
-
-        # attendence.json dosyasını güncelle
-        with open('attendance.json', 'w') as f:
-            json.dump(self.task_manager.attendance_data, f, indent=2)
-
-        QMessageBox.information(self, "Success", "Attendance records saved successfully!")
-
-
-    def connect_table_signals(self):
-            # Connect cellChanged signal for both tables to the update_attendance function
-            self.tableWidget_mattendencetable.cellChanged.connect(self.update_attendance)
-            self.tableWidget_cattendencetable.cellChanged.connect(self.update_attendance)
-
-    def update_attendance(self, row, col):
-
-        # Get the email from the respective table
-        email_col = 2  # Assuming Email column is at index 2
-        email_m = self.tableWidget_mattendencetable.item(row, email_col).text()
-        email_c = self.tableWidget_cattendencetable.item(row, email_col).text()
-
-        # Check if the column corresponds to a date (skip Name, Surname, and Email columns)
-        if col > 2:
-            # Get the date from the respective table
-            date_m = self.get_date_from_table(self.tableWidget_mattendencetable, col) if email_m else None
-            date_c = self.get_date_from_table(self.tableWidget_cattendencetable, col) if email_c else None
-
-            # Get the new attendance status from the table cell
-            status_m_item = self.tableWidget_mattendencetable.item(row, col)
-            status_m = status_m_item.text() if status_m_item is not None else None
-
-            status_c_item = self.tableWidget_cattendencetable.item(row, col)
-            status_c = status_c_item.text() if status_c_item is not None else None
-
-            # Update attendance data only if all necessary information is available
-            if email_m and date_m and status_m:
-                self.task_manager.update_attendance_data(email_m, "Mentor Meeting", date_m, status_m)
-
-            if email_c and date_c and status_c:
-                self.task_manager.update_attendance_data(email_c, "Data Science", date_c, status_c)
-
-    def get_date_from_table(self, table_widget, col):
-        # Get the date from the respective table
-        header_item = table_widget.horizontalHeaderItem(col)
-        if header_item is not None:
-            return header_item.text()
-        return None
-
-    def update_table(self):
-        # Students tablosunu güncelle
-        students = self.task_manager.get_students()
-        self.tableWidget_Students.setRowCount(len(students))
-
-        for row, student in enumerate(students):
-            email = student.get("Email", "")
-            name = student.get("name", "")
-            surname = student.get("surname", "")
-            tasks = self.task_manager.get_student_tasks(email)
-
-            # Satırı eklemek için rowCount kullanmamıza gerek yok
-            self.tableWidget_Students.insertRow(row)
-
-            self.tableWidget_Students.setItem(row, 2, QTableWidgetItem(email))
-            self.tableWidget_Students.setItem(row, 0, QTableWidgetItem(name))
-            self.tableWidget_Students.setItem(row, 1, QTableWidgetItem(surname))
-
-            # Görevleri birleştirip metin oluştur
-            tasks_text = ", ".join(f"{task.get('id')}={'✅' if task.get('status') else '❌'}" for task in tasks)
-
-            # Doğru sütuna QTableWidgetItem ekleyin
-            self.tableWidget_Students.setItem(row, 3, QTableWidgetItem(tasks_text))
-
-
-
-
-
-
-######################################################################################################################
-    def fill_courses(self):
-        """
-        Fills the courses with course/mentor name and dates.
-        """
-        global db_url
+        if not selected_students or not selected_lesson_name:
+            QMessageBox.warning(self, "Warning", "Lütfen öğrenci ve ders seçimi yapın.")
+            return
 
         try:
             conn = psycopg2.connect(db_url)
-            cur = conn.cursor()
+            with conn.cursor() as cursor:
+                # lesson_id'yi lesson tablosundan al
+                cursor.execute("SELECT lesson_id FROM lesson WHERE lesson_name = %s", (selected_lesson_name,))
+                lesson_id = cursor.fetchone()[0]
 
-             # Fetch the number of distinct planned courses
-            
-            cur.execute("select count (distinct planned_date) from calendar;")
-            number_of_planned_courses = cur.fetchone()[0]
+                for student_id in selected_students:
+                    cursor.execute("""
+                        INSERT INTO calendar (lesson_id, teacher_id, creation_date, planned_date, student_id, status)
+                        VALUES (%s, %s, CURRENT_TIMESTAMP, %s, %s, FALSE)
+                    """, (lesson_id, global_user_id, planned_date, student_id))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'A lesson plan has been added', 'Create')
+                """, (global_user_id,))
 
-            courses_query= f"""
-            select DISTINCT planned_date, lesson_name from calendar
-            left join lesson
-            on calendar.lesson_id=lesson.lesson_id
-            order by planned_date
-            """
-            cur.execute(courses_query)
-            course_data = cur.fetchall()
-
-            row=0
-
-            self.course_tableWidget.setRowCount(number_of_planned_courses)  # Set the row count
-
-            for i in course_data:
-                print(i[0]," - ", i[1])
-
-
-                self.course_tableWidget.setItem(row,0,QTableWidgetItem(i[0]))
-                self.course_tableWidget.setItem(row,1, QTableWidgetItem(i[1]))
-
-                self.course_tableWidget.setColumnWidth(0, 150)
-                self.course_tableWidget.setColumnWidth(1, 150)
-                row += 1
+            conn.commit()
+            self.populate_calendar_combobox()
+            self.listWidget_coursemeet.clearSelection()
+            self.listWidget_studentlist.clearSelection()
+            QMessageBox.warning(self, "Success", "Ders planlama başarıyla kaydedildi.")
 
         except Exception as e:
-            # Rollback the transaction in case of an error
-            conn.rollback()
-            print(f"Error: {str(e)}")
+            print(f"Hata: Ders planlama kaydedilirken bir sorun oluştu. Hata: {e}")
+
         finally:
-            cur.close()
-            conn.close()     
+            if conn:
+                conn.close()
+
+                
+                
+    def populate_calendar_combobox(self):
+        try:
+            conn = psycopg2.connect(db_url)
+            with conn.cursor() as cursor:
+                # calendar tablosundan ilgili bilgileri çek
+                cursor.execute("""
+                    SELECT DISTINCT ON (u.first_name, u.last_name, l.lesson_name, c.planned_date)
+                        c.calendar_id, u.first_name || ' ' || u.last_name AS teacher_name, l.lesson_name, c.planned_date
+                    FROM calendar c
+                    JOIN usertable u ON c.teacher_id = u.user_id
+                    JOIN lesson l ON c.lesson_id = l.lesson_id
+                """)
+                calendar_data = cursor.fetchall()
+
+                # comboBox'ı doldur
+                self.comboBox.clear()  # Combobox'ı temizle
+                for calendar_id, teacher_name, lesson_name, planned_date in calendar_data:
+                    self.comboBox.addItem(f"{teacher_name} - {lesson_name} - {planned_date}")
+
+        except Exception as e:
+            print(f"Hata: Combobox doldurulurken bir sorun oluştu. Hata: {e}")
+
+        finally:
+            if conn:
+                conn.close()            
+ 
+ 
+    def edit_lesson_plan(self):
+
+        global global_user_id
+        
+        selected_item_text = self.comboBox.currentText()
+        if not selected_item_text:
+            print("Lütfen silinecek bir ders planı seçin.")
+            return
+
+        try:
+            conn = psycopg2.connect(db_url)
+            with conn.cursor() as cursor:
+                # Seçilen ders planının bilgilerini ayrıştır
+                parts = selected_item_text.split(" - ")
+                if len(parts) != 3:
+                    print("Hatalı ders planı formatı.")
+                    return
+
+                teacher_name, lesson_name, planned_date = parts
+
+                # Ders planlarını sil
+                cursor.execute("""
+                    DELETE FROM calendar
+                    WHERE teacher_id = (SELECT user_id FROM usertable WHERE CONCAT(first_name, ' ', last_name) = %s)
+                    AND lesson_id = (SELECT lesson_id FROM lesson WHERE lesson_name = %s)
+                    AND planned_date = %s
+                """, (teacher_name, lesson_name, planned_date))
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Lessonplan has been edited', 'Update')
+                """, (global_user_id,))
+
+            conn.commit()
+
+            # Silme işleminden sonra comboBox'ı yeniden doldur
+            self.populate_calendar_combobox()
+
+        except Exception as e:
+            print(f"Hata: Ders planları silinirken bir sorun oluştu. Hata: {e}")
+
+        finally:
+            if conn:
+                conn.close()
+
+        # Daha sonra yeni ders planlarını ekleyerek güncelle
+        self.edit_schedule() 
+        
+        self.listWidget_studentlist_2.clearSelection()
+        self.listWidget_coursemeet_2.clearSelection()
 
 
-####################################################################################################################
+    def get_student_info_from_item(self, item_text):
+        try:
+            # Öğrenci verisini ":" karakterinden ayır
+            parts = item_text.split(":")
+            if len(parts) != 2:
+                print(f"Hatalı öğrenci verisi formatı: {item_text}")
+                return None, None
+
+            # Öğrenci ID'sini ve adını al
+            student_id = int(parts[0].strip())
+            student_name = parts[1].strip()
+
+            return student_id, student_name
+
+        except ValueError as ve:
+            print(f"Hata: Öğrenci ID'si sayıya dönüştürülemedi. Hata: {ve}")
+            return None, None
+
+    def edit_schedule(self):
+        global global_user_id
+        selected_students = self.listWidget_studentlist_2.selectedItems()
+        selected_course_item  = self.listWidget_coursemeet_2.currentItem()
+        planned_date = self.dateTimeEdit_sch_2.dateTime().toString("yyyy-MM-dd hh:mm:ss")
+        teacher_id = global_user_id
+
+        # Eğer currentItem varsa devam et, yoksa uyarı ver ve işlemi sonlandır
+        if selected_course_item is None:
+            QMessageBox.warning(self, "Warning", "Lütfen bir ders seçin.")
+            return
+        
+        selected_course = selected_course_item.text()
+
+        try:
+            conn = psycopg2.connect(db_url)
+            with conn.cursor() as cursor:
+                for student_item in selected_students:
+                    # Öğrenci bilgisini al
+                    student_id, student_name = self.get_student_info_from_item(student_item.text())
+                    if student_id is None:
+                        continue
+
+                    # Ders bilgilerini al
+                    cursor.execute("SELECT lesson_id FROM lesson WHERE lesson_name = %s", (selected_course,))
+                    lesson_row = cursor.fetchone()
+                    if not lesson_row:
+                        print(f"Ders bulunamadı: {selected_course}")
+                        continue
+
+                    lesson_id = lesson_row[0]
+
+                    # Ders planını kaydet
+                    cursor.execute("""
+                        INSERT INTO calendar (lesson_id, teacher_id, creation_date, planned_date, student_id, status)
+                        VALUES (%s, %s, CURRENT_TIMESTAMP, %s, %s, FALSE)
+                    """, (lesson_id, teacher_id, planned_date, student_id))
+                    cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Schedule has been edited', 'Edit')
+                """, (global_user_id,))
+
+                conn.commit()
+                QMessageBox.information(self, "Success", "Ders planları başarıyla kaydedildi.")
+
+        except Exception as e:
+            print(f"Hata: Ders planları kaydedilirken bir sorun oluştu. Hata: {e}")
+            QMessageBox.warning(self, "Warning", f"Ders planları kaydedilirken bir hata oluştu:\n{e}")
+
+        finally:
+            if conn:
+                conn.close()
+        
+        self.populate_calendar_combobox()                
+
+    def delete_selected_lesson(self):
+        selected_item_text = self.comboBox.currentText()
+        if not selected_item_text:
+            print("Lütfen silinecek bir ders planı seçin.")
+            return
+
+        try:
+            conn = psycopg2.connect(db_url)
+            with conn.cursor() as cursor:
+                # Seçilen ders planının bilgilerini ayrıştır
+                parts = selected_item_text.split(" - ")
+                if len(parts) != 3:
+                    print("Hatalı ders planı formatı.")
+                    return
+
+                teacher_name, lesson_name, planned_date = parts
+
+                # Ders planlarını sil
+                cursor.execute("""
+                    DELETE FROM calendar
+                    WHERE teacher_id = (SELECT user_id FROM usertable WHERE CONCAT(first_name, ' ', last_name) = %s)
+                    AND lesson_id = (SELECT lesson_id FROM lesson WHERE lesson_name = %s)
+                    AND planned_date = %s
+                """, (teacher_name, lesson_name, planned_date))
+
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Calendar', CURRENT_TIMESTAMP, 'Lesson has been deleted', 'Delete')
+                """, (global_user_id,))
+
+            conn.commit()
+            QMessageBox.warning(self, "Success", "Ders planlama başarıyla silindi.")
+
+            # Silme işleminden sonra comboBox'ı yeniden doldur
+            self.populate_calendar_combobox()
+
+        except Exception as e:
+            print(f"Hata: Ders planları silinirken bir sorun oluştu. Hata: {e}")
+
+        finally:
+            if conn:
+                conn.close()
+
+
+
+
 
 
 
 class TaskManager:
     def __init__(self):
-        self.load_data()
-        
-    def load_data(self):
-        # accounts.json, tasks.json ve announcements.json dosyalarını oku
-        
-        with open('accounts.json', 'r') as f:
-            self.accounts_data = json.load(f)
+        pass
 
-        with open('tasks.json', 'r') as f:
-            self.tasks_data = json.load(f)  
+   
 
-        try:    
-            with open('attendance.json', 'r') as f:
-                self.attendance_data = json.load(f)    
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.attendance_data = {}
-
-        try:
-            with open('announcements.json', 'r') as f:
-                self.announcements_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.announcements_data = []        
 
 
     def get_lessons(self):
@@ -2378,12 +2696,7 @@ class TaskManager:
 
         return lessons
             
-    def get_all_tasks(self):
-        # Tüm görevleri al ve ID'ye göre sırala
-        all_tasks = [task for tasks in self.tasks_data.values() for task in tasks.get("tasks", [])]
-        unique_tasks = {task["id"]: task for task in all_tasks}
-        sorted_tasks = sorted(unique_tasks.values(), key=lambda x: int(x["id"]), reverse=True)
-        return sorted_tasks
+
 
     def get_students(self):
         students = []
@@ -2410,8 +2723,12 @@ class TaskManager:
 
         return students
 
+
+
         
+
     def create_announcement(self, announcement_text, last_date):
+        global global_user_id
         try:
             conn = psycopg2.connect(db_url)
             # Veritabanına anonsu ekle
@@ -2422,27 +2739,15 @@ class TaskManager:
                     "INSERT INTO announcement (teacher_id, text, date, deadline) VALUES (%s, %s, %s, %s)",
                     (teacher_id, announcement_text, date_created, last_date)
                 )
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Announcement', CURRENT_TIMESTAMP, 'Announcement has been created', 'Create')
+                """, (global_user_id,))
             conn.commit()
 
         except Exception as e:
             print(f"Hata: Anons oluşturulurken bir sorun oluştu. Hata: {e}")
 
-
-    def update_attendance_data(self, email, meeting_type, date, status):
-        if email not in self.attendance_data:
-            self.attendance_data[email] = {}
-
-        if meeting_type not in self.attendance_data[email]:
-            self.attendance_data[email][meeting_type] = {}
-
-            # Sadece durumu "N/A" değilse güncelle
-        if status != "N/A":
-            # Update attendance data for the specified meeting type
-            self.attendance_data[email][meeting_type][date] = status
-
-        # Update attendence.json file
-        with open('attendance.json', 'w') as f:
-            json.dump(self.attendance_data, f, indent=2)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
