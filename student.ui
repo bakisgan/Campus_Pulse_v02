@@ -417,6 +417,9 @@ border-radius: 11px; </string>
       <pointsize>8</pointsize>
      </font>
     </property>
+    <property name="toolTip">
+     <string>asdas</string>
+    </property>
     <property name="styleSheet">
      <string notr="true">border-radius: 11px; 
 background-color: rgb(200, 218, 212);</string>

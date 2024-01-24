@@ -1,7 +1,7 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDateTimeEdit, QStackedWidget, QMessageBox, QWidget, QTableWidget, QTableWidgetItem, QCheckBox, QLabel, QCalendarWidget, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout
-from PyQt5.QtCore import Qt, QTimer, QDate, QDateTime
+from PyQt5.QtCore import Qt, QTimer, QDate, QDateTime, QTime
 from PyQt5.uic import loadUi
 import json
 import re
@@ -267,9 +267,9 @@ class Login(QMainWindow):
 
                         if account_type == "Student":
                             stackedWidget.setCurrentIndex(3)
-                            student.load_attendance()
+                            # student.load_attendance()
                             # student.load_tasks()
-                            student.load_announcements()
+                            # student.load_announcements()
                             student.load_calendar_events()
                             student.show_tasks()
                             student.populate_table()
@@ -1276,18 +1276,24 @@ class Main_Window(QMainWindow):
                         self.calendar.setDateTextFormat(date, self.get_calendar_event_format2())
             
                 selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
-                cur.execute(f"SELECT lesson_id FROM calendar where planned_date = '{selected_date}'")
-                lesson_show=cur.fetchone()
-                if lesson_show == None:
+                
+                # cur.execute(f"SELECT lesson_id, planned_date FROM calendar where planned_date = '{selected_date}'")
+                # cur.execute(f"SELECT * FROM your_table WHERE date_trunc('day', planned_date)::date = %s;")
+                sql = "SELECT lesson_id, planned_date FROM calendar WHERE date_trunc('day', planned_date)::date = %s;"
+                cur.execute(sql, (datetime.strptime(selected_date, "%Y-%m-%d").date(),))
+
+                lesson_show=cur.fetchall()
+                if lesson_show == []:
                     self.note_edit.clear() 
                 else:   
-                    cur.execute(f"SELECT lesson_name FROM lesson where lesson_id = '{lesson_show[0]}'")
+                    cur.execute(f"SELECT lesson_name FROM lesson where lesson_id = '{lesson_show[0][0]}'")
                     nameles = cur.fetchone()
                     # selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
               
                     les=nameles[0]
-                    print(les)
-                    self.note_edit.setText(str(les))
+                    time=lesson_show[0][1].strftime("%H:%M")
+                    text=f"Event: {les}, Time:{time}"
+                    self.note_edit.setText(text)
                 
             else:
                 pass
@@ -1494,6 +1500,16 @@ class Main_Window(QMainWindow):
             # Close the cursor and connection
             cur.close()
             conn.close()
+
+
+
+# if checkbox.isChecked():
+#                     cur.execute("UPDATE application SET status = FALSE WHERE email = %s",(email_key,))
+#                     cur.execute("""
+#                     INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+#                     VALUES (%s, 'Application', CURRENT_TIMESTAMP, 'Teacher Account is not approved', 'Update')
+#                 """, (global_user_id,))
+#             conn.commit()
 
 
 # announcements  
@@ -2369,10 +2385,7 @@ class TaskManager:
 
         return students
 
-
-
         
-
     def create_announcement(self, announcement_text, last_date):
         try:
             conn = psycopg2.connect(db_url)
