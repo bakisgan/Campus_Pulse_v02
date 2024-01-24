@@ -4,8 +4,8 @@
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
-    datas=[],
+    binaries=[('<path_to_PyQt5_dlls>', '.')],
+    datas=[('<path_to_PyQt5_plugins>', 'PyQt5_plugins')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
