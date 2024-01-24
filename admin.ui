@@ -125,9 +125,15 @@ background-color: rgb(170, 0, 0);</string>
      <rect>
       <x>20</x>
       <y>320</y>
-      <width>221</width>
+      <width>241</width>
       <height>22</height>
      </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(209, 209, 209);</string>
@@ -138,21 +144,8 @@ background-color: rgb(170, 0, 0);</string>
      <rect>
       <x>20</x>
       <y>350</y>
-      <width>221</width>
+      <width>241</width>
       <height>22</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(209, 209, 209);</string>
-    </property>
-   </widget>
-   <widget class="QCalendarWidget" name="logcalendarWidget">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>380</y>
-      <width>221</width>
-      <height>161</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -188,6 +181,33 @@ background-color: rgb(170, 0, 0);</string>
      <string>Filter</string>
     </property>
    </widget>
+   <widget class="QDateTimeEdit" name="logcalendarWidget">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>380</y>
+      <width>241</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="toolTipDuration">
+     <number>0</number>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(209, 209, 209);</string>
+    </property>
+    <property name="date">
+     <date>
+      <year>2024</year>
+      <month>1</month>
+      <day>1</day>
+     </date>
+    </property>
+    <property name="calendarPopup">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -195,7 +215,7 @@ background-color: rgb(170, 0, 0);</string>
      <x>0</x>
      <y>0</y>
      <width>885</width>
-     <height>18</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
