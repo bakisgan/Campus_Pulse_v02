@@ -984,7 +984,7 @@ class Admin(QMainWindow):
             selected_user = cur.fetchone()[0] if cur.rowcount > 0 else None
 
             selected_transaction = self.Transaction_combo.currentText()
-            selected_date = self.logcalendarWidget.selectedDate().toString("yyyy-MM-dd")
+            selected_date = self.logcalendarWidget.date().toString(Qt.ISODate)
 
             conditions = []
 
@@ -1044,7 +1044,7 @@ class Admin(QMainWindow):
             conn.close()
 
         # Clear the date selection in the logcalendarWidget
-        self.logcalendarWidget.setSelectedDate(QDate(2024, 1, 1))
+        self.logcalendarWidget.setDate(QDate(2024, 1, 1))
 
     
 
