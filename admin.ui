@@ -120,32 +120,6 @@ background-color: rgb(170, 0, 0);</string>
      <string>Chatboard</string>
     </property>
    </widget>
-   <widget class="QTableWidget" name="courseWidget">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>-10</y>
-      <width>261</width>
-      <height>191</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(209, 209, 209);</string>
-    </property>
-   </widget>
-   <widget class="QTableWidget" name="studentWidget">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>-10</y>
-      <width>401</width>
-      <height>192</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(209, 209, 209);</string>
-    </property>
-   </widget>
    <widget class="QComboBox" name="Users_combo">
     <property name="geometry">
      <rect>
