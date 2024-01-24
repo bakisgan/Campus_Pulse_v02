@@ -295,6 +295,8 @@ class Login(QMainWindow):
                             stackedWidget.setCurrentIndex(5)
                             teacher.label_Name.setText(f"Welcome {user_data[3]} {user_data[4]}")
                             # admin.fill_table()
+                            admin.fill_courses()
+                            admin.fill_students()
 
                     else:
                         self.show_error_message("User not found.")
@@ -797,6 +799,11 @@ class Admin(QMainWindow):
         self.tableWidget.setColumnWidth(2,150)
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setHorizontalHeaderLabels([ "Select", "Email", "Name", "Surname"])
+        self.courseWidget.itemSelectionChanged.connect(self.fill_students)
+        self.populate_user_combobox()
+        self.populate_transaction_combobox()
+        self.filter_button.clicked.connect(self.fill_logdata)
+
         self.fill_table()
 
 
@@ -927,6 +934,266 @@ class Admin(QMainWindow):
     def switch_chatboard(self):
         stackedWidget.setCurrentIndex(6)
         chatboard.fill_user_list2()
+
+    def fill_courses(self):
+        """
+        Fills the courses with course/mentor name and dates.
+        """
+        global db_url
+
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+             # Fetch the number of distinct planned courses
+            
+            cur.execute("select count (distinct planned_date) from calendar;")
+            number_of_planned_courses = cur.fetchone()[0]
+
+            courses_query= f"""
+            select DISTINCT planned_date, lesson_name from calendar
+            left join lesson
+            on calendar.lesson_id=lesson.lesson_id
+            order by planned_date
+            """
+            cur.execute(courses_query)
+            course_data = cur.fetchall()
+
+            row=0
+
+            self.courseWidget.setRowCount(number_of_planned_courses)  # Set the row count
+            self.courseWidget.setColumnCount(2)
+            self.courseWidget.setHorizontalHeaderLabels([ "Date", "Name"])
+            self.courseWidget.setColumnWidth(0, 150)
+            self.courseWidget.setColumnWidth(1, 150)
+
+            for i in course_data:
+
+                self.courseWidget.setItem(row, 0, QTableWidgetItem(i[0].strftime('%Y-%m-%d %H:%M:%S')))
+                self.courseWidget.setItem(row, 1, QTableWidgetItem(str(i[1])))
+
+
+                self.courseWidget.setColumnWidth(0, 120)
+                self.courseWidget.setColumnWidth(1, 120)
+                row += 1
+
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            conn.rollback()
+            print(f"Error: {str(e)}")
+        finally:
+            cur.close()
+            conn.close()    
+    
+    def fill_students(self):
+        """
+        Fills the table with assigned students.
+        """
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            # Fetch the count of pending accounts
+            selected_items = self.courseWidget.selectedItems()
+            if not selected_items:
+                return
+            selected_row=selected_items[0].row()
+            lessondate=self.courseWidget.item(selected_row,0).text()
+            lessonname=self.courseWidget.item(selected_row,1).text()
+            print(lessondate,lessonname)
+
+            # lessondate = '2024-01-25 00:00:00'
+            # lessonname = 'Mathematics'
+
+            self.studentWidget.setColumnCount(2)
+            self.studentWidget.setHorizontalHeaderLabels(["Attendance", "Name"])
+            self.studentWidget.setColumnWidth(0, 100)
+            self.studentWidget.setColumnWidth(1, 300)
+
+            # Fetch number of students assigned to the lesson
+            query1 = f'''SELECT COUNT(student_id) FROM calendar
+                        LEFT JOIN lesson ON calendar.lesson_id = lesson.lesson_id
+                        WHERE planned_date = '{lessondate}' AND lesson_name = '{lessonname}';
+                    '''
+            cur.execute(query1)
+            number_of_students = cur.fetchone()[0]
+
+            row = 0
+            self.studentWidget.setRowCount(number_of_students)
+
+            # Fetch data of students assigned to the lesson
+            query2 = f'''SELECT calendar.student_id, calendar.status, usertable.first_name, usertable.last_name, calendar.lesson_id
+                        FROM calendar
+                        LEFT JOIN lesson ON calendar.lesson_id = lesson.lesson_id
+                        LEFT JOIN usertable ON calendar.student_id = usertable.user_id
+                        WHERE calendar.planned_date = '{lessondate}' AND lesson.lesson_name = '{lessonname}';
+                    '''
+
+            # Fetch the data for students
+            cur.execute(query2)
+            student_data = cur.fetchall()
+
+            for i in range(number_of_students):
+                checkbox = QCheckBox()
+                studentid = student_data[i][0]
+                attendance_status = student_data[i][1]
+                firstname = student_data[i][2]
+                lastname = student_data[i][3]
+                lessonid=student_data[i][4]
+                checkbox.setChecked(attendance_status)
+                # Connect the stateChanged signal of the checkbox to the update_calendar_status method
+                checkbox.stateChanged.connect(lambda state, sid=studentid: self.update_calendar_status(sid, lessonid, lessondate, state == Qt.Checked))
+
+                self.studentWidget.setCellWidget(row, 0, checkbox)
+                self.studentWidget.setItem(row, 1, QTableWidgetItem(f"{firstname} {lastname}"))
+                row += 1
+                print(firstname)
+        except Exception as e:
+            print(f"Error loading data: {e}")
+        finally:
+            cur.close()
+            conn.close()
+
+    def update_calendar_status(self, student_id, lessonid, planneddate, new_status):
+        """
+        Update the status in the calendar database.
+        """
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            # Convert planneddate to string and enclose it in single quotes
+            planneddate_str = str(planneddate)
+
+            # Update the status in the calendar table
+            update_query = f'''
+                UPDATE calendar
+                SET status = {new_status}
+                WHERE student_id = {student_id} AND lesson_id = '{lessonid}' AND planned_date = '{planneddate_str}';
+            '''
+            cur.execute(update_query)
+            conn.commit()
+
+        except Exception as e:
+            print(f"Error updating calendar status: {e}")
+        finally:
+            cur.close()
+            conn.close()
+
+    def populate_user_combobox(self):
+            # Populate the combo box with user emails from usertable
+            global db_url
+            try:
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                cur.execute("SELECT email FROM usertable;")
+                user_emails = cur.fetchall()
+                self.Users_combo.addItem("None")
+                for email in user_emails:
+                    self.Users_combo.addItem(email[0])
+            except Exception as e:
+                print(f"Error populating user combo box: {e}")
+            finally:
+                cur.close()
+                conn.close()
+    
+    def populate_transaction_combobox(self):
+            # Populate the combo box with user emails from usertable
+            global db_url
+            try:
+                conn = psycopg2.connect(db_url)
+                cur = conn.cursor()
+                cur.execute("SELECT DISTINCT event_type FROM logtable;")
+                transactions = cur.fetchall()
+                self.Transaction_combo.addItem("None")
+                for transaction in transactions:
+                    self.Transaction_combo.addItem(transaction[0])
+            except Exception as e:
+                print(f"Error populating user combo box: {e}")
+            finally:
+                cur.close()
+                conn.close()
+    
+    def fill_logdata(self):
+        """
+        Fills the table with log data
+        """
+        global db_url
+        try:
+            conn = psycopg2.connect(db_url)
+            cur = conn.cursor()
+
+            selected_email = self.Users_combo.currentText()
+            cur.execute("SELECT user_id FROM usertable WHERE email = %s", (selected_email,))
+            selected_user = cur.fetchone()[0] if cur.rowcount > 0 else None
+
+            selected_transaction = self.Transaction_combo.currentText()
+            selected_date = self.logcalendarWidget.selectedDate().toString("yyyy-MM-dd")
+
+            conditions = []
+
+            if selected_user:
+                conditions.append(f"logtable.user_id = '{selected_user}'")
+
+            if selected_transaction != "None":
+                conditions.append(f"logtable.event_type = '{selected_transaction}'")
+
+            if selected_date != "2024-01-01":
+                conditions.append(f"DATE(logtable.time_stamp) = '{selected_date}'")
+
+            # Construct the SQL query
+            where_clause = " AND ".join(conditions)
+            query = f"""
+                SELECT usertable.first_name, usertable.last_name, logtable.event_type, logtable.time_stamp, logtable.action, logtable.type
+                FROM logtable
+                LEFT JOIN usertable ON logtable.user_id = usertable.user_id
+                {"WHERE" if conditions else ""}
+                {where_clause};
+            """
+
+            cur.execute(query)
+            log_records = cur.fetchall()
+            number_of_records = len(log_records)
+
+            self.logtablewidget.setColumnCount(5)
+            self.logtablewidget.setHorizontalHeaderLabels(["Name", "Event", "Date", "Action", "Type"])
+            self.logtablewidget.setColumnWidth(0, 150)
+            self.logtablewidget.setColumnWidth(1, 150)
+            self.logtablewidget.setColumnWidth(2, 150)
+            self.logtablewidget.setColumnWidth(3, 150)
+            self.logtablewidget.setColumnWidth(4, 150)
+
+            self.logtablewidget.setRowCount(number_of_records)
+
+            row = 0
+            for i in range(number_of_records):
+                name = log_records[i][0] + " " + log_records[i][1]
+                event = log_records[i][2]
+                date = str(log_records[i][3])
+                action = log_records[i][4]
+                tip = log_records[i][5]
+
+                self.logtablewidget.setItem(row, 0, QTableWidgetItem(name))
+                self.logtablewidget.setItem(row, 1, QTableWidgetItem(event))
+                self.logtablewidget.setItem(row, 2, QTableWidgetItem(date))
+                self.logtablewidget.setItem(row, 3, QTableWidgetItem(action))
+                self.logtablewidget.setItem(row, 4, QTableWidgetItem(tip))
+
+                row += 1
+
+        except Exception as e:
+            print(f"Error loading data: {e}")
+        finally:
+            cur.close()
+            conn.close()
+
+        # Clear the date selection in the logcalendarWidget
+        self.logcalendarWidget.setSelectedDate(QDate(2024, 1, 1))
+
+    
+
     
 class Chatboard(QMainWindow):
     """
@@ -959,7 +1226,7 @@ class Chatboard(QMainWindow):
         self.history_LE.setReadOnly(True)
         # Connect Enter key press event to send_message method
         self.send_TE.installEventFilter(self)
-        self.fill_courses()
+        
 
 
     def fill_user_list2(self):
@@ -1182,53 +1449,7 @@ class Chatboard(QMainWindow):
         chatboard.fill_user_list2()
 
 
-    def fill_courses(self):
-        """
-        Fills the courses with course/mentor name and dates.
-        """
-        global db_url
-        print("fill courses çalıştırıldı")
 
-        try:
-            conn = psycopg2.connect(db_url)
-            cur = conn.cursor()
-
-             # Fetch the number of distinct planned courses
-            
-            cur.execute("select count (distinct planned_date) from calendar;")
-            number_of_planned_courses = cur.fetchone()[0]
-
-            courses_query= f"""
-            select DISTINCT planned_date, lesson_name from calendar
-            left join lesson
-            on calendar.lesson_id=lesson.lesson_id
-            order by planned_date
-            """
-            cur.execute(courses_query)
-            course_data = cur.fetchall()
-
-            row=0
-
-            self.courseWidget.setRowCount(number_of_planned_courses)  # Set the row count
-
-            for i in course_data:
-                print(i[0]," - ", i[1])
-
-
-                self.courseWidget.setItem(row,0,QTableWidgetItem(i[0]))
-                self.courseWidget.setItem(row,1, QTableWidgetItem(i[1]))
-
-                self.courseWidget.setColumnWidth(0, 150)
-                self.courseWidget.setColumnWidth(1, 150)
-                row += 1
-
-        except Exception as e:
-            # Rollback the transaction in case of an error
-            conn.rollback()
-            print(f"Error: {str(e)}")
-        finally:
-            cur.close()
-            conn.close()    
 
 
 class Main_Window(QMainWindow):
@@ -2385,52 +2606,52 @@ class MyMainWindow(QMainWindow):
 
 
 ######################################################################################################################
-    def fill_courses(self):
-        """
-        Fills the courses with course/mentor name and dates.
-        """
-        global db_url
+    # def fill_courses(self):
+    #     """
+    #     Fills the courses with course/mentor name and dates.
+    #     """
+    #     global db_url
 
-        try:
-            conn = psycopg2.connect(db_url)
-            cur = conn.cursor()
+    #     try:
+    #         conn = psycopg2.connect(db_url)
+    #         cur = conn.cursor()
 
-             # Fetch the number of distinct planned courses
+    #          # Fetch the number of distinct planned courses
             
-            cur.execute("select count (distinct planned_date) from calendar;")
-            number_of_planned_courses = cur.fetchone()[0]
+    #         cur.execute("select count (distinct planned_date) from calendar;")
+    #         number_of_planned_courses = cur.fetchone()[0]
 
-            courses_query= f"""
-            select DISTINCT planned_date, lesson_name from calendar
-            left join lesson
-            on calendar.lesson_id=lesson.lesson_id
-            order by planned_date
-            """
-            cur.execute(courses_query)
-            course_data = cur.fetchall()
+    #         courses_query= f"""
+    #         select DISTINCT planned_date, lesson_name from calendar
+    #         left join lesson
+    #         on calendar.lesson_id=lesson.lesson_id
+    #         order by planned_date
+    #         """
+    #         cur.execute(courses_query)
+    #         course_data = cur.fetchall()
 
-            row=0
+    #         row=0
 
-            self.course_tableWidget.setRowCount(number_of_planned_courses)  # Set the row count
+    #         self.course_tableWidget.setRowCount(number_of_planned_courses)  # Set the row count
 
-            for i in course_data:
-                print(i[0]," - ", i[1])
+    #         for i in course_data:
+    #             print(i[0]," - ", i[1])
 
 
-                self.course_tableWidget.setItem(row,0,QTableWidgetItem(i[0]))
-                self.course_tableWidget.setItem(row,1, QTableWidgetItem(i[1]))
+    #             self.course_tableWidget.setItem(row,0,QTableWidgetItem(i[0]))
+    #             self.course_tableWidget.setItem(row,1, QTableWidgetItem(i[1]))
 
-                self.course_tableWidget.setColumnWidth(0, 150)
-                self.course_tableWidget.setColumnWidth(1, 150)
-                row += 1
+    #             self.course_tableWidget.setColumnWidth(0, 150)
+    #             self.course_tableWidget.setColumnWidth(1, 150)
+    #             row += 1
 
-        except Exception as e:
-            # Rollback the transaction in case of an error
-            conn.rollback()
-            print(f"Error: {str(e)}")
-        finally:
-            cur.close()
-            conn.close()     
+    #     except Exception as e:
+    #         # Rollback the transaction in case of an error
+    #         conn.rollback()
+    #         print(f"Error: {str(e)}")
+    #     finally:
+    #         cur.close()
+    #         conn.close()     
 
 
 ####################################################################################################################
