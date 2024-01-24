@@ -1598,6 +1598,8 @@ class MyMainWindow(QMainWindow):
         self.pushButton_Delete_Task.clicked.connect(self.delete_task)
         self.pushButton_schedule.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
         self.pushButton_announcement.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
+        self.courseWidget.itemSelectionChanged.connect(self.fill_students)
+        self.comboBox_tasks.currentIndexChanged.connect(self.onComboBoxIndexChanged)
 
         self.pushButton_SchSave.clicked.connect(self.save_attendance)
         
@@ -1913,19 +1915,23 @@ class MyMainWindow(QMainWindow):
         assigned_students = [item.text().split(":")[0] for item in selected_items]
 
         # Görevi belirtilen öğrencilere ata ve veritabanına ekle
-        for student_id in assigned_students:
-            try:
-                conn = psycopg2.connect(db_url)
-                # Veritabanına yeni görev ekle
-                with conn.cursor() as cursor:
+        try:
+            conn = psycopg2.connect(db_url)
+            # Veritabanına yeni görev ekle
+            with conn.cursor() as cursor:
+                for student_id in assigned_students:
                     cursor.execute("""
                         INSERT INTO task (teacher_id, text, date, deadline, status, student_id)
                         VALUES (%s, %s, CURRENT_TIMESTAMP, %s, FALSE, %s)
                     """, (global_user_id, task_text, deadline, int(student_id)))
-                conn.commit()
+                cursor.execute("""
+                INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task has been created', 'Create')
+            """, (global_user_id,))
+                conn.commit()   
 
-            except Exception as e:
-                print(f"Hata: Görev eklenirken bir sorun oluştu. Hata: {e}")
+        except Exception as e:
+            print(f"Hata: Görev eklenirken bir sorun oluştu. Hata: {e}")
 
         QMessageBox.information(self, "Success", "Task created successfully!")
 
@@ -1939,12 +1945,31 @@ class MyMainWindow(QMainWindow):
         self.listWidget_AssignList_2.clearSelection()
         self.populate_students_list()
 
+    def onComboBoxIndexChanged(self, Index):
+        selected_task_text = self.comboBox_tasks.currentText()
+        conn = psycopg2.connect(db_url)
+        cursor = conn.cursor()
+        cursor.execute("SELECT deadline FROM task WHERE text = %s", (selected_task_text,))
+        deadline = cursor.fetchall()
+   
+        # self.dateTimeEdit_Deadline.setDate(QDate(deadline[0][0]))
+        self.dateTimeEdit_Deadline.setDate(2024,1,8)
+
+        conn.close()
+
+
     def edit_task(self):
         # Get the selected task text from comboBox_tasks
         selected_task_text = self.comboBox_tasks.currentText()
 
         # Get the new task information from listWidget_AssignList_2, plainTextEdit_NewTask_2, and dateTimeEdit_Deadline_2
         new_assigned_students = [item.text().split(":")[0] for item in self.listWidget_AssignList_2.selectedItems()]
+        # listWidget_AssignList_2'den kişi seçilip seçilmediğini kontrol et
+        if not new_assigned_students:
+            QMessageBox.warning(self, "Warning", "Please select at least one student.")
+            return
+        # self.logcalendarWidget.setDate(QDate(2024, 1, 1))
+
         new_task_text = self.plainTextEdit_NewTask_2.toPlainText()
 
         new_deadline_control = self.dateTimeEdit_Deadline_2.date()
