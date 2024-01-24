@@ -3,7 +3,7 @@ import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDateTimeEdit, QStackedWidget, QMessageBox, QWidget, QTableWidget, QTableWidgetItem, QCheckBox, QLabel, QCalendarWidget, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout
 from PyQt5.QtCore import Qt, QTimer, QDate, QDateTime
 from PyQt5.uic import loadUi
-import json
+
 import re
 from datetime import datetime
 from PyQt5.QtGui import QColor
@@ -363,7 +363,7 @@ class Signup(QMainWindow):
 
         Retrieves user input, checks for existing email, password matching,
         and password strength. If all conditions are met, adds the new account
-        to the 'accounts.json' file and switches to the login form.
+        to usertable and switches to the login form.
         """
         email = self.signup_email_LE.text()
         plain_password = self.signup_password_LE.text()
@@ -587,7 +587,7 @@ class ContactAdmin(QMainWindow):
 
         Retrieves user input, checks for existing requests, existing accounts,
         password matching, and password strength. If all conditions are met,
-        adds the new TA account request to the 'TA_tobecreated.json' file.
+        adds the new TA account request to the application table.
         """
         email = self.TA_email_LE.text()
         plain_password = self.TA_password_LE.text()
@@ -2028,13 +2028,8 @@ class MyMainWindow(QMainWindow):
         stackedWidget.setCurrentIndex(6)
     
     def switch_to_admin(self):
-        email=login.email_LE.text()
-        with open('accounts.json', 'r') as f:
-            self.accounts_data = json.load(f)
-            if self.accounts_data[email]["Account_Type"]=="Admin":
-                stackedWidget.setCurrentIndex(5)
-            else:
-                pass
+
+        stackedWidget.setCurrentIndex(5)
 
             
 
@@ -2662,28 +2657,9 @@ class MyMainWindow(QMainWindow):
 
 class TaskManager:
     def __init__(self):
-        self.load_data()
+
         
-    def load_data(self):
-        # accounts.json, tasks.json ve announcements.json dosyalarını oku
-        
-        with open('accounts.json', 'r') as f:
-            self.accounts_data = json.load(f)
 
-        with open('tasks.json', 'r') as f:
-            self.tasks_data = json.load(f)  
-
-        try:    
-            with open('attendance.json', 'r') as f:
-                self.attendance_data = json.load(f)    
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.attendance_data = {}
-
-        try:
-            with open('announcements.json', 'r') as f:
-                self.announcements_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.announcements_data = []        
 
 
     def get_lessons(self):
