@@ -20,7 +20,7 @@ os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 database_name = "db_campusv2"
 user = "postgres"
 # "MerSer01"
-password = "MerSer01"
+password = "1"
 host = "localhost"
 port = "5432"
 
@@ -1312,7 +1312,7 @@ class Main_Window(QMainWindow):
     def __init__(self):
         super(Main_Window, self).__init__()
 
-        loadUi('student.ui', self)  # UI dosyasını yükle
+        loadUi('student.ui', self)  
         self.pushButton.clicked.connect(self.switch_chatboard)
         self.pushButton_2.clicked.connect(self.switch_userprofile)
         self.back_button.clicked.connect(self.switch_login)
@@ -1320,9 +1320,9 @@ class Main_Window(QMainWindow):
         self.setWindowTitle('Campus Pulse')
 
 
-        self.note_edit = self.findChild(QLabel, 'note_edit')  # UI dosyasındaki note_edit adlı öğeyi bul
-        self.calendar = self.findChild(QCalendarWidget, 'calendarWidget')  # UI dosyasındaki calendarWidget adlı öğeyi bul
-        self.mission_complete = self.findChild(QPushButton, 'self.mission_complete') 
+        self.note_edit = self.findChild(QLabel, 'note_edit')  # Find the element named note_edit in the UI file.
+        self.calendar = self.findChild(QCalendarWidget, 'calendarWidget')  # Find the element named calendarWidget in the UI file.
+        self.mission_complete = self.findChild(QPushButton, 'self.mission_complete')  # Find the element named mission_complete in the UI file.
 
 
         self.calendar.clicked.connect(self.load_calendar_events)
@@ -1342,24 +1342,30 @@ class Main_Window(QMainWindow):
                 
                 for date_str in date_show:
                     date = QDate.fromString(str(date_str[1]), Qt.ISODate)
-                    if date.isValid() and (str(date_str[0])!="1"):  #and result1==['Mentor']:
+                    #If there is a date value and the lesson ID is 1 (if it is a mentor meeting), go to format1 for calendar coloring.
+                    if date.isValid() and (str(date_str[0])!="1"): 
                         self.calendar.setDateTextFormat(date, self.get_calendar_event_format1())
                     else:
                         self.calendar.setDateTextFormat(date, self.get_calendar_event_format2())
             
                 selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
-                cur.execute(f"SELECT lesson_id FROM calendar where planned_date = '{selected_date}'")
-                lesson_show=cur.fetchone()
-                if lesson_show == None:
+                
+                #Extract the time information from the 'planned_date' variable and take only the date information.
+                sql = "SELECT lesson_id, planned_date FROM calendar WHERE date_trunc('day', planned_date)::date = %s;"
+                cur.execute(sql, (datetime.strptime(selected_date, "%Y-%m-%d").date(),))
+                lesson_show=cur.fetchall()
+
+                if lesson_show == []:
                     self.note_edit.clear() 
+                #Show the event and time on the selected date in the calendar.
                 else:   
-                    cur.execute(f"SELECT lesson_name FROM lesson where lesson_id = '{lesson_show[0]}'")
+                    cur.execute(f"SELECT lesson_name FROM lesson where lesson_id = '{lesson_show[0][0]}'")
                     nameles = cur.fetchone()
-                    # selected_date = self.calendar.selectedDate().toString(Qt.ISODate)
-              
                     les=nameles[0]
-                    # print(les)
-                    self.note_edit.setText(str(les))
+                    time=lesson_show[0][1].strftime("%H:%M")
+                    text=f"Event: {les}, Time:{time}"
+                    self.note_edit.setText(text)
+                    
                 
             else:
                 pass
@@ -1370,7 +1376,6 @@ class Main_Window(QMainWindow):
             print(f"Error: {e}")
 
         finally:
-            # Close the cursor and connection
             cur.close()
             conn.close()
 
@@ -1378,7 +1383,7 @@ class Main_Window(QMainWindow):
     def get_calendar_event_format1(self):
         format = self.calendar.dateTextFormat(self.calendar.selectedDate())
         font = format.font()
-        font.setBold(True)  # Metni bold yap
+        font.setBold(True)  # Text bold
         format.setFont(font)
         format.setForeground(Qt.red)
         format.setBackground(Qt.green)
@@ -1387,7 +1392,7 @@ class Main_Window(QMainWindow):
     def get_calendar_event_format2(self):
         format = self.calendar.dateTextFormat(self.calendar.selectedDate())
         font = format.font()
-        font.setBold(True)  # Metni bold yap
+        font.setBold(True)  # Text bold
         format.setFont(font)
         format.setForeground(Qt.green)
         format.setBackground(Qt.red)
@@ -1398,17 +1403,17 @@ class Main_Window(QMainWindow):
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
         try:
-            
-
-    
+            #Remove all table items for news.
             for i in range(self.tableWidget.rowCount() - 1, -1, -1):
                 is_row_empty = all(self.tableWidget.item(i, j) is None or self.tableWidget.item(i, j).text() == '' for j in range(self.tableWidget.columnCount()))
                 if not is_row_empty:
                     self.tableWidget.removeRow(i)
 
+            #Assign the statuses in the ComboBox to a variable.
             filter_statu1 = self.comboBox_2.currentText()
             filter_statu2 = self.comboBox_3.currentText()
 
+            #Filter the data from the database based on the selection in the ComboBox.
             if filter_statu1=='Mentor Meetings': 
                 cur.execute(f'SELECT lesson_id, planned_date, status FROM calendar WHERE student_id={global_user_id} and lesson_id =1 order by planned_date asc')
                 event_show=cur.fetchall()
@@ -1424,23 +1429,23 @@ class Main_Window(QMainWindow):
             i=0
             for a in event_show:
                 if len(lesname)>1:
-                    x_name = str(lesname[i][0]) # lesson name icin dongu
+                    x_name = str(lesname[i][0]) #Loop for lesson_name.
                     i+=1
                 else:
-                    x_name = str(lesname[0][0]) # mentor icin sadece 1 isim var o yuzden tekli geliyor
+                    x_name = str(lesname[0][0]) 
                 if a[2]==False:
                     value='Not Attended'
                 else:
                     value='Attended'
 
                 postgre_date=a[1]    
-                qdate = QDate(postgre_date.year, postgre_date.month, postgre_date.day) #sql den gelen date i QDate formatina cevir
+                qdate = QDate(postgre_date.year, postgre_date.month, postgre_date.day) #Convert the date from SQL to QDate format.
                 current_date = QDate.currentDate()
 
                 if value==filter_statu2 and qdate <= current_date:
                     row_position = self.tableWidget.rowCount()
                     self.tableWidget.insertRow(row_position)
-                    item_date = QTableWidgetItem(qdate.toString("yyyy-MM-dd")) # date i string olarak yazdir
+                    item_date = QTableWidgetItem(qdate.toString("yyyy-MM-dd")) # Print the date as a string.
                     item_value = QTableWidgetItem(str(value))
                     item_event = QTableWidgetItem(x_name)
                     self.tableWidget.setItem(row_position, 0, item_event)
@@ -1456,13 +1461,14 @@ class Main_Window(QMainWindow):
                     self.tableWidget.setItem(row_position, 0, item_event)
                     self.tableWidget.setItem(row_position, 1, item_value)
                     self.tableWidget.setVerticalHeaderItem(row_position, item_date)
+
+            conn.commit()
         
         
         except Exception as e:
             print(f"Error: {e}")
 
         finally:
-            # Close the cursor and connection
             cur.close()
             conn.close()
 
@@ -1478,10 +1484,9 @@ class Main_Window(QMainWindow):
 
 
             if task_show:
-                # Görevleri göster
                 self.check_boxes = []
 
-                
+                #Show task, deadline, and task assignee information to the database.
                 for task_row in task_show:
                     cur.execute(f"SELECT first_name, last_name FROM usertable WHERE user_id = {str(task_row[1])};")
                     teacher_show=cur.fetchall()
@@ -1491,7 +1496,7 @@ class Main_Window(QMainWindow):
                     self.table_todolist.setItem(row_position, 2, QTableWidgetItem(str(task_row[4])))
                     self.table_todolist.setItem(row_position, 3, QTableWidgetItem(str(teacher_show[0][0])+' '+str(teacher_show[0][1])))
                    
-                
+                    # Show the statuses of tasks in the database.
                     self.check_box = QCheckBox()
                     if task_row[5] == True:
                         self.check_box.setChecked(True)
@@ -1501,8 +1506,7 @@ class Main_Window(QMainWindow):
                     self.table_todolist.setCellWidget(row_position,0, self.check_box)
                     self.check_boxes.append(self.check_box)
 
-            
-
+                # Set the column width.
                 self.table_todolist.setColumnWidth(0,30)
                 self.table_todolist.setColumnWidth(1,325)
                 self.table_todolist.setColumnWidth(2,90)
@@ -1511,8 +1515,6 @@ class Main_Window(QMainWindow):
                 self.connect_check_boxes()
             else:
                 pass
-
-            # Commit the changes to the database
             conn.commit()
 
             print("Tasks showed successfully!")
@@ -1521,7 +1523,6 @@ class Main_Window(QMainWindow):
             print(f"Error: {e}")
 
         finally:
-            # Close the cursor and connection
             cur.close()
             conn.close()
 
@@ -1534,12 +1535,13 @@ class Main_Window(QMainWindow):
         
             for row, check_box in enumerate(self.check_boxes):
                 check_box.stateChanged.connect(lambda state, r=row: self.onCheckBoxStateChanged(state, r))
+        
+            conn.commit()
 
         except Exception as e:
             print(f"Error: {e}")
 
         finally:
-            # Close the cursor and connection
             cur.close()
             conn.close()
 
@@ -1573,7 +1575,6 @@ class Main_Window(QMainWindow):
             print(f"Error: {e}")
 
         finally:
-            # Close the cursor and connection
             cur.close()
             conn.close()
 
@@ -1581,13 +1582,13 @@ class Main_Window(QMainWindow):
 # announcements  
     def show_announcements(self):
             
-        self.announcement_i = 0  # Sıradaki anonsun indeksi
+        self.announcement_i = 0  # Index of the next announcement.
 
-        # QTimer oluştur
+        #Create a QTimer.
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.up_announcements)
-        self.timer.start(1500)  # 5 saniyede bir kontrol et     
-        self.up_announcements()  # Başlangıçta da çalıştır
+        self.timer.start(1500)  # Check every 5 seconds    
+        self.up_announcements()  # Run at the beginning as well.
 
  # Update announcement
     def up_announcements(self):
@@ -1610,18 +1611,18 @@ class Main_Window(QMainWindow):
                         self.announcement_textedit.setText('')
                         self.announcement_textedit.setText(f' 📢❗🚨 {ann_show[self.announcement_i][2]}   Deadline: {ann_show[self.announcement_i][4]} 📢❗🚨') #ekranda sola bitisik yazmasin
             
-                    # Bir sonraki anonsa geç
+                    # Move on to the next announcement.
                     self.announcement_i += 1
             else:
-            # Anons listesinin sonuna gelindiğinde başa dön
+            # When the end of the announcement list is reached, go back to the beginning.
                 self.announcement_i = 0
             
-                
+            conn.commit()
+            
         except Exception as e:
             print(f"Error: {e}")
 
         finally:
-            # Close the cursor and connection
             cur.close()
             conn.close()
 
@@ -2757,7 +2758,7 @@ if __name__ == '__main__':
     stackedWidget = QStackedWidget()
     database_name = "db_campusv2"
     user = "postgres"
-    password = "MerSer01"
+    password = "1"
     host = "localhost"
     port = "5432"
 
