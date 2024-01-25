@@ -1688,7 +1688,7 @@ class MyMainWindow(QMainWindow):
         self.tableWidget_Students.setColumnWidth(1,250)
         self.tableWidget_Students.setColumnWidth(2,335)
 
-        self.tableWidget_ToDoList.setColumnWidth(0, 100)  # 0. sütunun genişliği
+        self.tableWidget_ToDoList.setColumnWidth(0, 400)  # 0. sütunun genişliği
         self.tableWidget_ToDoList.setColumnWidth(1, 100)  # 1. sütunun genişliği
         self.tableWidget_ToDoList.setColumnWidth(2, 200)
         #self.gecici.clicked.connect(self.fill_courses)
