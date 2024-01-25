@@ -1651,7 +1651,8 @@ class MyMainWindow(QMainWindow):
         super(MyMainWindow, self).__init__()
         #self.setupUi(self)
         loadUi("teacher_page.ui", self)
-        self.setWindowTitle('Campus Pulse')
+        self.setWindowTitle('🎓 Campus Pulse')
+        print(self.windowTitle())
         self.task_manager = TaskManager()
         self.pushButton_LessonSave.clicked.connect(self.save_lesson)
         self.announcements = self.fetch_announcements_from_database() 
@@ -1676,11 +1677,12 @@ class MyMainWindow(QMainWindow):
         self.pushButton_switchadmin.clicked.connect(self.switch_to_admin)
         self.pushButton_Edit_Task.clicked.connect(self.edit_task)
         self.pushButton_Delete_Task.clicked.connect(self.delete_task)
-        self.pushButton_schedule.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
+        self.pushButton_schedule.clicked.connect(lambda: self.MainPage.setCurrentIndex(2))   
+        self.pushButton_schedule_2.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
         self.pushButton_announcement.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
         self.courseWidget.itemSelectionChanged.connect(self.fill_students)
         self.comboBox_tasks.currentIndexChanged.connect(self.onComboBoxIndexChanged)
-
+        
         
         self.tableWidget_Students.setColumnWidth(0,150)
         self.tableWidget_Students.setColumnWidth(1,250)
@@ -1696,7 +1698,7 @@ class MyMainWindow(QMainWindow):
 
         # Send Announcement butonuna tıklandığında
         self.pushButton_SendAnnouncement.clicked.connect(self.send_announcement)
-        self.announcement_index = 0  # Sıradaki anonsun indeksi
+        #self.announcement_index = 0  # Sıradaki anonsun indeksi
 
         # QTimer oluştur
         self.timer = QTimer(self)
@@ -1883,12 +1885,11 @@ class MyMainWindow(QMainWindow):
                 announcements.append(announcement)
 
         except Exception as e:
-            print(f"Hata: Veritabanından anonsları çekerken bir sorun oluştu. Hata: {e}")
+            print(f"Error: There is a problem while retrieving announcements from the database. Error: {e}")
 
         return announcements
 
     def update_announcements_from_database(self):
-        
         # Anonsları güncelle
         if self.announcement_index < len(self.announcements):
             announcement = self.announcements[self.announcement_index]
@@ -1921,14 +1922,24 @@ class MyMainWindow(QMainWindow):
                 self.comboBox_announcement.addItem(f"{announcement_id}: {text}")
 
         except Exception as e:
-            print(f"Hata: announcement_id'leri ve announcement_text'leri çekerken bir sorun oluştu. Hata: {e}")
+            print(f"Error: There is a problem while fetching announcement IDs and announcement texts. Error: {e}")
         # Seçilen announcement'ın text'ini göstermek için
 
 
     def display_selected_announcement(self):
         selected_text = self.comboBox_announcement.currentText()
-        announcement_text = selected_text.split(": ")[1]
-        self.textEdit_announcementtext_5.setPlainText(announcement_text)
+        
+        # İlk ':' karakterinin konumunu bulun
+        first_colon_index = selected_text.find(':')
+        
+        # İlk ':' karakterinden sonrasını alın
+        if first_colon_index != -1:
+            announcement_text = selected_text[first_colon_index + 1:].strip()
+            self.textEdit_announcementtext_5.setPlainText(announcement_text)
+        else:
+            # ':' karakteri bulunamadıysa, tüm metni kullanın
+            self.textEdit_announcementtext_5.setPlainText(selected_text)
+
 
     # Announcement'ı düzenlemek için
     def edit_announcement(self):
@@ -1963,8 +1974,14 @@ class MyMainWindow(QMainWindow):
             QMessageBox.information(self, "Success", "Announcement updated successfully!")
 
         except Exception as e:
-            print(f"Hata: announcement güncellenirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while editing the announcement. Error: {e}")
 
+        self.populate_announcements()       
+        self.fetch_announcements_from_database()
+        self.update_announcements()
+        
+        
+        
     # Announcement'ı silmek için
     def delete_announcement(self):
         selected_id = int(self.comboBox_announcement.currentText().split(": ")[0])
@@ -1986,10 +2003,12 @@ class MyMainWindow(QMainWindow):
             QMessageBox.information(self, "Success", "Announcement deleted successfully!")
 
         except Exception as e:
-            print(f"Hata: announcement silinirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: There is a problem while deleting announcement. Error: {e}")
             # Anons listesinin sonuna gelindiğinde başa dön
             self.announcement_index = 0
-
+        self.populate_announcements()       
+        self.fetch_announcements_from_database()
+        self.update_announcements()
 
     def save_lesson(self):
         # Kullanıcı tarafından girilen ders adını al
@@ -1997,17 +2016,19 @@ class MyMainWindow(QMainWindow):
 
         # Ders adını kontrol et
         if not lesson_name:
-            QMessageBox.warning(self, 'Uyarı', 'Ders adı boş olamaz.')
+            QMessageBox.warning(self, 'Warning', 'Lesson Name can not be empty.')
             return
 
         # Ders adının daha önce eklenip eklenmediğini kontrol et
         if self.is_lesson_exists(lesson_name):
-            QMessageBox.warning(self, 'Uyarı', 'Bu ders zaten var. Lütfen yeni bir ders giriniz.')
+            QMessageBox.warning(self, 'Warning', 'This lesson is already in database. Please, enter a new lesson')
             return
 
         # Ders adını veritabanına eklemek için fonksiyonu çağır
         self.insert_lesson_to_database(lesson_name)
-        QMessageBox.information(self, 'Bilgi', 'Ders başarıyla kaydedildi.')
+               
+        QMessageBox.information(self, 'Information', 'Lesson has been created into the database')
+        self.populate_coursemeet_list()
 
     def is_lesson_exists(self, lesson_name):
         try:
@@ -2022,7 +2043,7 @@ class MyMainWindow(QMainWindow):
             return result is not None
 
         except Exception as e:
-            print(f"Hata: Veritabanında sorgu yaparken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occurred while querying the database. Error: {e}")
             return False
 
         finally:
@@ -2044,7 +2065,7 @@ class MyMainWindow(QMainWindow):
             connection.commit()
 
         except Exception as e:
-            print(f"Hata: Veritabanına yeni kayıt eklerken bir sorun oluştu. Hata: {e}")
+            print(f"Error: There is a problem adding a new record to the database. Error: {e}")
 
         finally:
             # Bağlantıyı kapat
@@ -2110,7 +2131,7 @@ class MyMainWindow(QMainWindow):
                 self.comboBox_tasks.addItem(task_name)
 
         except Exception as e:
-            print(f"Hata: Görevler çekilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: There is a problem while fetching tasks. Error: {e}")
 
 
 
@@ -2155,7 +2176,7 @@ class MyMainWindow(QMainWindow):
                 conn.commit()   
 
         except Exception as e:
-            print(f"Hata: Görev eklenirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: There is a problem while creating task. Error: {e}")
 
         QMessageBox.information(self, "Success", "Task created successfully!")
 
@@ -2167,6 +2188,7 @@ class MyMainWindow(QMainWindow):
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()
         self.populate_students_list()
+        self.display_upcoming_tasks()
 
     def onComboBoxIndexChanged(self, Index):
         selected_task_text = self.comboBox_tasks.currentText()
@@ -2235,19 +2257,20 @@ class MyMainWindow(QMainWindow):
                 QMessageBox.information(self, "Success", "Task edited successfully!")
 
         except Exception as e:
-            print(f"Hata: Görev düzenlenirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while editing task. Hata: {e}")
 
         finally:
             self.populate_task_combobox()
 
             conn.close()
-            
+        self.display_upcoming_tasks()
         self.plainTextEdit_NewTask.clear()
         self.dateTimeEdit_Deadline.clear()
         self.populate_task_combobox()
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()        
         self.populate_students_list()
+        self.display_upcoming_tasks()
 
     def delete_task(self):
         # Get the selected task text from comboBox_tasks
@@ -2278,13 +2301,15 @@ class MyMainWindow(QMainWindow):
         finally:
             conn.close()
 
-        # Refresh the combobox after deleting the task
+        self.display_upcoming_tasks()
         self.plainTextEdit_NewTask.clear()
         self.dateTimeEdit_Deadline.clear()
+        # Refresh the combobox after deleting the task
         self.populate_task_combobox()
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()
         self.populate_students_list()
+        self.display_upcoming_tasks()
 
 
 
@@ -2302,7 +2327,8 @@ class MyMainWindow(QMainWindow):
                 return
             last_date = last_date_control.toString("yyyy-MM-dd")
 
-            self.task_manager.create_announcement(announcement_text, last_date)
+            self.create_announcement(announcement_text, last_date)
+            
             QMessageBox.information(self, "Success", "Announcement created successfully!")
 
             # Anons oluşturulduktan sonra formu temizle
@@ -2310,7 +2336,38 @@ class MyMainWindow(QMainWindow):
             self.dateEdit_lastdateofannouncement.clear()
 
         except Exception as e:
-            print(f"Hata: Anons gönderilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while creatiing announcement. Error: {e}")
+
+
+    def create_announcement(self, announcement_text, last_date):
+        global global_user_id
+        try:
+            conn = psycopg2.connect(db_url)
+            # Veritabanına anonsu ekle
+            teacher_id = global_user_id  # Bu değeri global_user_id olarak aldık
+            date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO announcement (teacher_id, text, date, deadline) VALUES (%s, %s, %s, %s)",
+                    (teacher_id, announcement_text, date_created, last_date)
+                )
+                cursor.execute("""
+                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
+                    VALUES (%s, 'Announcement', CURRENT_TIMESTAMP, 'Announcement has been created', 'Create')
+                """, (global_user_id,))
+            conn.commit()
+            
+
+
+        except Exception as e:
+            print(f"Error: A problem occured while creating announcement. Error: {e}")
+
+        self.fetch_announcements_from_database()
+        self.update_announcements_from_database()
+        self.update_announcements()
+        self.populate_announcements()
+
+
 
 
     def display_upcoming_tasks(self):
@@ -2345,7 +2402,7 @@ class MyMainWindow(QMainWindow):
                 self.tableWidget_ToDoList.setItem(row, 2, QTableWidgetItem(f"{teacher_first_name} {teacher_last_name}"))
 
         except Exception as e:
-            print(f"Hata: Görev bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while fetching task. Error: {e}")
         finally:
             if conn:
                 conn.close()
@@ -2404,7 +2461,7 @@ class MyMainWindow(QMainWindow):
                 students.append(student)
 
         except Exception as e:
-            print(f"Hata: Öğrenci bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while fetching student information. Error: {e}")
 
         return students
     
@@ -2426,7 +2483,7 @@ class MyMainWindow(QMainWindow):
                 tasks.append(task)
 
         except Exception as e:
-            print(f"Hata: Öğrenci görev bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while fetching student info. Error: {e}")
 
         return tasks    
 
@@ -2437,14 +2494,14 @@ class MyMainWindow(QMainWindow):
         # Kontrol ekleniyor
         selected_lesson_item = self.listWidget_coursemeet.currentItem()
         if selected_lesson_item is None:
-            QMessageBox.warning(self, "Warning", "Lütfen bir ders seçin.")
+            QMessageBox.warning(self, "Warning", "Please select a lesson.")
             return
 
         selected_lesson_name = selected_lesson_item.text()
         planned_date = self.dateTimeEdit_sch.dateTime().toString("yyyy-MM-dd hh:mm:ss")
 
         if not selected_students or not selected_lesson_name:
-            QMessageBox.warning(self, "Warning", "Lütfen öğrenci ve ders seçimi yapın.")
+            QMessageBox.warning(self, "Warning", "Please select lesson and students.")
             return
 
         try:
@@ -2465,13 +2522,15 @@ class MyMainWindow(QMainWindow):
                 """, (global_user_id,))
 
             conn.commit()
+            self.populate_coursemeet_list()
             self.populate_calendar_combobox()
+            self.fill_courses()
             self.listWidget_coursemeet.clearSelection()
             self.listWidget_studentlist.clearSelection()
-            QMessageBox.warning(self, "Success", "Ders planlama başarıyla kaydedildi.")
+            QMessageBox.warning(self, "Success", "Lesson plan has been created successfully.")
 
         except Exception as e:
-            print(f"Hata: Ders planlama kaydedilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while creating lesson plan. Error: {e}")
 
         finally:
             if conn:
@@ -2499,7 +2558,7 @@ class MyMainWindow(QMainWindow):
                     self.comboBox.addItem(f"{teacher_name} - {lesson_name} - {planned_date}")
 
         except Exception as e:
-            print(f"Hata: Combobox doldurulurken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while filling combobox. Error: {e}")
 
         finally:
             if conn:
@@ -2512,7 +2571,7 @@ class MyMainWindow(QMainWindow):
         
         selected_item_text = self.comboBox.currentText()
         if not selected_item_text:
-            print("Lütfen silinecek bir ders planı seçin.")
+            print("Please choose a lesson plan to delete.")
             return
 
         try:
@@ -2521,7 +2580,7 @@ class MyMainWindow(QMainWindow):
                 # Seçilen ders planının bilgilerini ayrıştır
                 parts = selected_item_text.split(" - ")
                 if len(parts) != 3:
-                    print("Hatalı ders planı formatı.")
+                    print("Wrong lesson plan format.")
                     return
 
                 teacher_name, lesson_name, planned_date = parts
@@ -2544,7 +2603,7 @@ class MyMainWindow(QMainWindow):
             self.populate_calendar_combobox()
 
         except Exception as e:
-            print(f"Hata: Ders planları silinirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while deleting lesson plan. Error: {e}")
 
         finally:
             if conn:
@@ -2552,6 +2611,8 @@ class MyMainWindow(QMainWindow):
 
         # Daha sonra yeni ders planlarını ekleyerek güncelle
         self.edit_schedule() 
+        self.populate_coursemeet_list()
+        self.populate_calendar_combobox()
         
         self.listWidget_studentlist_2.clearSelection()
         self.listWidget_coursemeet_2.clearSelection()
@@ -2562,7 +2623,7 @@ class MyMainWindow(QMainWindow):
             # Öğrenci verisini ":" karakterinden ayır
             parts = item_text.split(":")
             if len(parts) != 2:
-                print(f"Hatalı öğrenci verisi formatı: {item_text}")
+                print(f"Wrong student information format: {item_text}")
                 return None, None
 
             # Öğrenci ID'sini ve adını al
@@ -2572,7 +2633,7 @@ class MyMainWindow(QMainWindow):
             return student_id, student_name
 
         except ValueError as ve:
-            print(f"Hata: Öğrenci ID'si sayıya dönüştürülemedi. Hata: {ve}")
+            print(f"Error:Student id couldnt be changed to the integer. Error: {ve}")
             return None, None
 
     def edit_schedule(self):
@@ -2584,7 +2645,7 @@ class MyMainWindow(QMainWindow):
 
         # Eğer currentItem varsa devam et, yoksa uyarı ver ve işlemi sonlandır
         if selected_course_item is None:
-            QMessageBox.warning(self, "Warning", "Lütfen bir ders seçin.")
+            QMessageBox.warning(self, "Warning", "Please choose a lesson.")
             return
         
         selected_course = selected_course_item.text()
@@ -2602,7 +2663,7 @@ class MyMainWindow(QMainWindow):
                     cursor.execute("SELECT lesson_id FROM lesson WHERE lesson_name = %s", (selected_course,))
                     lesson_row = cursor.fetchone()
                     if not lesson_row:
-                        print(f"Ders bulunamadı: {selected_course}")
+                        print(f"No lesson found: {selected_course}")
                         continue
 
                     lesson_id = lesson_row[0]
@@ -2618,22 +2679,23 @@ class MyMainWindow(QMainWindow):
                 """, (global_user_id,))
 
                 conn.commit()
-                QMessageBox.information(self, "Success", "Ders planları başarıyla kaydedildi.")
+                QMessageBox.information(self, "Success", "Lesson plans has been updated")
 
         except Exception as e:
-            print(f"Hata: Ders planları kaydedilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while creating lesson plan. Error: {e}")
             QMessageBox.warning(self, "Warning", f"Ders planları kaydedilirken bir hata oluştu:\n{e}")
 
         finally:
             if conn:
                 conn.close()
         
-        self.populate_calendar_combobox()                
+        self.populate_calendar_combobox()  
+        self.fill_courses()              
 
     def delete_selected_lesson(self):
         selected_item_text = self.comboBox.currentText()
         if not selected_item_text:
-            print("Lütfen silinecek bir ders planı seçin.")
+            print("Choose a lesson plan to delete.")
             return
 
         try:
@@ -2642,7 +2704,7 @@ class MyMainWindow(QMainWindow):
                 # Seçilen ders planının bilgilerini ayrıştır
                 parts = selected_item_text.split(" - ")
                 if len(parts) != 3:
-                    print("Hatalı ders planı formatı.")
+                    print("Wrong lesson plan format.")
                     return
 
                 teacher_name, lesson_name, planned_date = parts
@@ -2661,13 +2723,14 @@ class MyMainWindow(QMainWindow):
                 """, (global_user_id,))
 
             conn.commit()
-            QMessageBox.warning(self, "Success", "Ders planlama başarıyla silindi.")
+            QMessageBox.warning(self, "Success", "Lesson plan has been deleted successfully.")
 
             # Silme işleminden sonra comboBox'ı yeniden doldur
             self.populate_calendar_combobox()
+            self.fill_courses()    
 
         except Exception as e:
-            print(f"Hata: Ders planları silinirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while deleting lesson plan. Hata: {e}")
 
         finally:
             if conn:
@@ -2702,7 +2765,7 @@ class TaskManager:
                 lessons.append(lesson_name)
 
         except Exception as e:
-            print(f"Hata: Ders adları çekilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while fetching lesson names. Error: {e}")
 
         return lessons
             
@@ -2729,7 +2792,7 @@ class TaskManager:
                 students.append(student)
 
         except Exception as e:
-            print(f"Hata: Öğrenci bilgileri çekilirken bir sorun oluştu. Hata: {e}")
+            print(f"Error: A problem occured while fetching student info. Error: {e}")
 
         return students
 
@@ -2737,26 +2800,6 @@ class TaskManager:
 
         
 
-    def create_announcement(self, announcement_text, last_date):
-        global global_user_id
-        try:
-            conn = psycopg2.connect(db_url)
-            # Veritabanına anonsu ekle
-            teacher_id = global_user_id  # Bu değeri global_user_id olarak aldık
-            date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    "INSERT INTO announcement (teacher_id, text, date, deadline) VALUES (%s, %s, %s, %s)",
-                    (teacher_id, announcement_text, date_created, last_date)
-                )
-                cursor.execute("""
-                    INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
-                    VALUES (%s, 'Announcement', CURRENT_TIMESTAMP, 'Announcement has been created', 'Create')
-                """, (global_user_id,))
-            conn.commit()
-
-        except Exception as e:
-            print(f"Hata: Anons oluşturulurken bir sorun oluştu. Hata: {e}")
 
 
 if __name__ == '__main__':
@@ -2781,6 +2824,7 @@ if __name__ == '__main__':
     admin=Admin()
     chatboard=Chatboard()
     userprofile=User_Profile()
+    
 
 
 
