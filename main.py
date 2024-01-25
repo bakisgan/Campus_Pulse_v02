@@ -20,7 +20,7 @@ os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 database_name = "db_campusv2"
 user = "postgres"
 # "MerSer01"
-password = "1"
+password = "MerSer01"
 host = "localhost"
 port = "5432"
 
@@ -1560,7 +1560,7 @@ class Main_Window(QMainWindow):
                 cur.execute("""
                     INSERT INTO logtable (user_id, event_type, time_stamp, action, type)
                     VALUES (%s, 'Task', CURRENT_TIMESTAMP, 'Task is completed', 'Update')
-                """, (task_show[row][0],))
+                """, (global_user_id,))
 
             else:
                 cur.execute(f"UPDATE task SET status = FALSE WHERE task_id={task_show[row][0]}")
@@ -2758,7 +2758,7 @@ if __name__ == '__main__':
     stackedWidget = QStackedWidget()
     database_name = "db_campusv2"
     user = "postgres"
-    password = "1"
+    password = "MerSer01"
     host = "localhost"
     port = "5432"
 
