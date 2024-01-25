@@ -178,7 +178,7 @@
        </sizepolicy>
       </property>
       <property name="toolTip">
-       <string>Best School Application Winner in 2024</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The winner of the Best School Application Award in 2023.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="toolTipDuration">
        <number>0</number>
