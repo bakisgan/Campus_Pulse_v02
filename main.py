@@ -1307,7 +1307,7 @@ class Chatboard(QMainWindow):
 
 
 
-
+#TODO student merve
 class Main_Window(QMainWindow):
     def __init__(self):
         super(Main_Window, self).__init__()
@@ -1473,12 +1473,19 @@ class Main_Window(QMainWindow):
             conn.close()
 
 # to do list
+
     def show_tasks(self):
 
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
 
         try:
+            #Remove all table items for news.
+            for i in range(self.table_todolist.rowCount() - 1, -1, -1):
+                is_row_empty = all(self.table_todolist.item(i, j) is None or self.table_todolist.item(i, j).text() == '' for j in range(self.table_todolist.columnCount()))
+                if not is_row_empty:
+                    self.table_todolist.removeRow(i)
+
             cur.execute(f"SELECT * FROM task WHERE student_id = {global_user_id} order by deadline asc")
             task_show=cur.fetchall()
 
