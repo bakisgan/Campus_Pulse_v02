@@ -2181,6 +2181,7 @@ class MyMainWindow(QMainWindow):
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()
         self.populate_students_list()
+        self.display_upcoming_tasks()
 
     def onComboBoxIndexChanged(self, Index):
         selected_task_text = self.comboBox_tasks.currentText()
@@ -2255,13 +2256,14 @@ class MyMainWindow(QMainWindow):
             self.populate_task_combobox()
 
             conn.close()
-            
+        self.display_upcoming_tasks()
         self.plainTextEdit_NewTask.clear()
         self.dateTimeEdit_Deadline.clear()
         self.populate_task_combobox()
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()        
         self.populate_students_list()
+        self.display_upcoming_tasks()
 
     def delete_task(self):
         # Get the selected task text from comboBox_tasks
@@ -2292,13 +2294,15 @@ class MyMainWindow(QMainWindow):
         finally:
             conn.close()
 
-        # Refresh the combobox after deleting the task
+        self.display_upcoming_tasks()
         self.plainTextEdit_NewTask.clear()
         self.dateTimeEdit_Deadline.clear()
+        # Refresh the combobox after deleting the task
         self.populate_task_combobox()
         self.listWidget_AssignList.clearSelection()
         self.listWidget_AssignList_2.clearSelection()
         self.populate_students_list()
+        self.display_upcoming_tasks()
 
 
 
