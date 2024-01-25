@@ -1674,7 +1674,7 @@ class MyMainWindow(QMainWindow):
         self.pushButton_announcement.clicked.connect(lambda: self.MainPage.setCurrentIndex(1))
         self.courseWidget.itemSelectionChanged.connect(self.fill_students)
         self.comboBox_tasks.currentIndexChanged.connect(self.onComboBoxIndexChanged)
-
+        
         
         self.tableWidget_Students.setColumnWidth(0,150)
         self.tableWidget_Students.setColumnWidth(1,250)
