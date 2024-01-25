@@ -168,9 +168,9 @@ border-radius: 15px; </string>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>640</x>
+      <x>620</x>
       <y>120</y>
-      <width>241</width>
+      <width>271</width>
       <height>471</height>
      </rect>
     </property>
@@ -262,7 +262,7 @@ border-radius: 15px; </string>
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>80</y>
       <width>201</width>
       <height>31</height>
@@ -289,7 +289,7 @@ border-radius: 11px; </string>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>370</y>
       <width>601</width>
       <height>221</height>
@@ -349,7 +349,7 @@ border-radius: 11px; </string>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>120</y>
       <width>601</width>
       <height>241</height>
@@ -406,9 +406,9 @@ border-radius: 11px; </string>
    <widget class="QLabel" name="announcement_textedit">
     <property name="geometry">
      <rect>
-      <x>230</x>
+      <x>220</x>
       <y>80</y>
-      <width>661</width>
+      <width>671</width>
       <height>31</height>
      </rect>
     </property>
